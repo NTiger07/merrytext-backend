@@ -8,6 +8,7 @@ public class MerrytextApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(MerrytextApplication.class, args);
+		System.out.println("Server started on port 8081");
 	}
 
 }
