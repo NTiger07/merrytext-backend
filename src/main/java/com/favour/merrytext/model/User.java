@@ -2,6 +2,8 @@ package com.favour.merrytext.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -10,6 +12,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String email;
+    private String username;
     private String name;
     private String authProvider; // "google", "apple", "email"
     private String profilePicture;
@@ -18,6 +21,10 @@ public class User {
     @Column(name = "total_xp")
     private Integer totalXp = 0;
     private Integer level = 1;
+    @Transient
+    private List<Message> messages = new ArrayList<>();
+    @Transient
+    private List<Transaction> transactions = new ArrayList<>();
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -47,6 +54,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getName() {
@@ -97,6 +112,21 @@ public class User {
         this.level = level;
     }
 
+    public List<Message> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<Message> messages) {
+        this.messages = messages;
+    }
+
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
+
+    public void setTransactions(List<Transaction> transactions) {
+        this.transactions = transactions;
+    }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

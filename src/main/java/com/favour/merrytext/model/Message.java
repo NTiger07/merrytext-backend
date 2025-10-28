@@ -12,7 +12,7 @@ public class Message {
 
     @Column(name = "owner_email")
     private String ownerEmail;
-    private String ownerName;
+    private String ownerUsername;
 
     private String recipientName;
     private String recipientPhone;
@@ -40,12 +40,12 @@ public class Message {
         this.id = id;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getOwnerUsername() {
+        return ownerUsername;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setOwnerUsername(String owneUsername) {
+        this.ownerUsername = owneUsername;
     }
 
     public String getOwnerEmail() {

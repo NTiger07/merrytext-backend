@@ -63,7 +63,7 @@ public class MessageService {
 
         // Create message
         Message message = new Message();
-        message.setOwnerName(user.getName());
+        message.setOwnerUsername(user.getUsername());
         message.setOwnerEmail(user.getEmail());
         message.setRecipientName(recipientName);
         message.setRecipientPhone(recipientPhone);
@@ -110,7 +110,7 @@ public class MessageService {
         // Create individual messages for each recipient
         for (int i = 0; i < recipientNames.length; i++) {
             Message message = new Message();
-            message.setOwnerName(user.getName()); 
+            message.setOwnerUsername(user.getUsername()); 
             message.setOwnerEmail(user.getEmail());
             message.setRecipientName(recipientNames[i]);
             message.setRecipientPhone(recipientPhones[i]);

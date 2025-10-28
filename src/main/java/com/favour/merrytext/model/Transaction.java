@@ -10,8 +10,8 @@ public class Transaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "owner_name")
-    private String ownerName;
+    @Column(name = "owner_username")
+    private String ownerUsername;
     @Column(name = "owner_email")
     private String ownerEmail;
 
@@ -35,12 +35,12 @@ public class Transaction {
         this.id = id;
     }
 
-    public String getOwnerName() {
-        return ownerName;
+    public String getOwnerUsername() {
+        return ownerUsername;
     }
 
-    public void setOwnerName(String ownerName) {
-        this.ownerName = ownerName;
+    public void setOwnerUsername(String owneUsername) {
+        this.ownerUsername = owneUsername;
     }
 
     public String getOwnerEmail() {

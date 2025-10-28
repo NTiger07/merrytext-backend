@@ -55,7 +55,7 @@ public class PaymentService {
 
                 // Create transaction record
                 Transaction transaction = new Transaction();
-                transaction.setOwnerName(user.getName());
+                transaction.setOwnerUsername(user.getUsername());
                 transaction.setOwnerEmail(user.getEmail());
                 transaction.setStripePaymentIntentId(paymentIntent.getId());
                 transaction.setAmount(amount);

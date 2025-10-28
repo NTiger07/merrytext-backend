@@ -32,6 +32,7 @@ public class DataInitializer {
                 // Create dummy users
                 User user1 = new User();
                 user1.setEmail("john@example.com");
+                user1.setUsername("john");
                 user1.setName("John Doe");
                 user1.setAuthProvider("email");
                 user1.setMerryCoins(100);
@@ -40,6 +41,7 @@ public class DataInitializer {
 
                 User user2 = new User();
                 user2.setEmail("jane@example.com");
+                user2.setUsername("jane");
                 user2.setName("Jane Doe");
                 user2.setAuthProvider("email");
                 user2.setMerryCoins(150);
@@ -51,7 +53,7 @@ public class DataInitializer {
 
                 // Create dummy messages
                 Message message1 = new Message();
-                message1.setOwnerName(user1.getName());
+                message1.setOwnerUsername(user1.getUsername());
                 message1.setOwnerEmail(user1.getEmail());
                 message1.setRecipientName("Alice Smith");
                 message1.setRecipientPhone("+1234567890");
@@ -64,7 +66,7 @@ public class DataInitializer {
                 message1.setSentAt(LocalDateTime.now());
 
                 Message message2 = new Message();
-                message2.setOwnerName(user2.getName());
+                message2.setOwnerUsername(user2.getUsername());
                 message2.setOwnerEmail(user2.getEmail());
                 message2.setRecipientName("Bob Johnson");
                 message2.setRecipientPhone("+1987654321");
@@ -82,7 +84,7 @@ public class DataInitializer {
 
                 // Create dummy transactions
                 Transaction transaction1 = new Transaction();
-                transaction1.setOwnerName(user1.getName());
+                transaction1.setOwnerUsername(user1.getUsername());
                 transaction1.setOwnerEmail(user1.getEmail());
                 transaction1.setAmount(1000); // $10.00 in cents
                 transaction1.setCoinsPurchased(100);
@@ -90,8 +92,8 @@ public class DataInitializer {
                 transaction1.setStripePaymentIntentId("pi_123456789");
 
                 Transaction transaction2 = new Transaction();
-                transaction2.setOwnerName(user1.getName());
-                transaction2.setOwnerEmail(user1.getEmail()); // $15.00 in cents
+                transaction2.setOwnerUsername(user2.getUsername());
+                transaction2.setOwnerEmail(user2.getEmail()); // $15.00 in cents
                 transaction2.setCoinsPurchased(150);
                 transaction2.setStatus("completed");
                 transaction2.setStripePaymentIntentId("pi_987654321");
