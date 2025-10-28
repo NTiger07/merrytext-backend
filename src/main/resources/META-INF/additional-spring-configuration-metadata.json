@@ -1,0 +1,27 @@
+{"properties": [
+  {
+    "name": "stripe.secret.key",
+    "type": "java.lang.String",
+    "description": "A description for 'stripe.secret.key'"
+  },
+  {
+    "name": "supabase.url",
+    "type": "java.lang.String",
+    "description": "A description for 'supabase.url'"
+  },
+  {
+    "name": "supabase.bucketname",
+    "type": "java.lang.String",
+    "description": "A description for 'supabase.bucketname'"
+  },
+  {
+    "name": "stripe.publishable.key",
+    "type": "java.lang.String",
+    "description": "A description for 'stripe.publishable.key'"
+  },
+  {
+    "name": "supabase.key",
+    "type": "java.lang.String",
+    "description": "A description for 'supabase.key'"
+  }
+]}

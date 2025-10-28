@@ -10,9 +10,9 @@ public class Message {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "owner_email")
+    private String ownerEmail;
+    private String ownerName;
 
     private String recipientName;
     private String recipientPhone;
@@ -40,12 +40,20 @@ public class Message {
         this.id = id;
     }
 
-    public User getUser() {
-        return user;
+    public String getOwnerName() {
+        return ownerName;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setOwnerName(String ownerName) {
+        this.ownerName = ownerName;
+    }
+
+    public String getOwnerEmail() {
+        return ownerEmail;
+    }
+
+    public void setOwnerEmail(String ownerEmail) {
+        this.ownerEmail = ownerEmail;
     }
 
     public String getRecipientName() {
@@ -143,14 +151,4 @@ public class Message {
     public void setOpenedAt(LocalDateTime openedAt) {
         this.openedAt = openedAt;
     }
-}
-
-enum TemplateType {
-    MEMORY_LANE,
-    HOLLYWOOD_TRAILER,
-    SNOWBALL_FIGHT,
-    FIREPLACE_CHAT,
-    CONFETTI_CANNON,
-    GRATITUDE_JAR,
-    PERSONALIZED_CAROL
 }
