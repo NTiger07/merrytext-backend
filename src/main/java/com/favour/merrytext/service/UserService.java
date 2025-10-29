@@ -10,6 +10,7 @@ import com.favour.merrytext.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -32,14 +33,28 @@ public class UserService {
         // For each user, filter their messages and transactions
         for (User user : users) {
             List<Message> userMessages = messageRepository.findByOwnerEmailOrderBySentAtDesc(user.getEmail());
-            List<Transaction> userTransactions = transactionRepository.findByOwnerEmailOrderByCreatedAtDesc(user.getEmail());
+            List<Transaction> userTransactions = transactionRepository
+                    .findByOwnerEmailOrderByCreatedAtDesc(user.getEmail());
 
-            // Append them manually (assuming you add these lists to User as transient
-            // fields)
             user.setMessages(userMessages);
             user.setTransactions(userTransactions);
         }
 
         return users;
+    }
+
+    public User getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException(
+                "User does not exist"));
+
+        List<Message> userMessages = messageRepository.findByOwnerEmailOrderBySentAtDesc(user.getEmail());
+        List<Transaction> userTransactions = transactionRepository
+                .findByOwnerEmailOrderByCreatedAtDesc(user.getEmail());
+
+
+        user.setMessages(userMessages);
+        user.setTransactions(userTransactions);
+
+        return user;
     }
 }

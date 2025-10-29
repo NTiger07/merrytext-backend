@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("merrytext/api/v1/users")
+@RequestMapping("merrytext/api/v1/user")
 public class UserController {
 
     private final UserService userService;
@@ -25,4 +25,10 @@ public class UserController {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
+
+    @GetMapping("{username}")
+    public User getUserByUSername(@PathVariable String username) {
+        return userService.getUserByUsername(username);
+    }
+    
 }
