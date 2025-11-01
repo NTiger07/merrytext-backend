@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/payments")
+@RequestMapping("merrytext/api/v1/payment")
 public class PaymentController {
 
     private final PaymentService paymentService;

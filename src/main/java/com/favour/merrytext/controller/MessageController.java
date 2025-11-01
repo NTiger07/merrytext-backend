@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/message")
+@RequestMapping("merrytext/api/v1/message")
 public class MessageController {
 
     private final MessageService messageService;

@@ -15,6 +15,7 @@ public class User {
     private String username;
     private String name;
     private String authProvider; // "google", "apple", "email"
+    private String password;
     private String profilePicture;
     @Column(name = "merry_coins")
     private Integer merryCoins = 0;
@@ -78,6 +79,14 @@ public class User {
 
     public void setAuthProvider(String authProvider) {
         this.authProvider = authProvider;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getProfilePicture() {

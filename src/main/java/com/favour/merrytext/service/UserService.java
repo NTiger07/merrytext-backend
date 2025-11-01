@@ -6,11 +6,8 @@ import com.favour.merrytext.model.Transaction;
 import com.favour.merrytext.repository.UserRepository;
 import com.favour.merrytext.repository.MessageRepository;
 import com.favour.merrytext.repository.TransactionRepository;
-
 import org.springframework.stereotype.Service;
-
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService {
