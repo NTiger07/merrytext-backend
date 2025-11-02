@@ -15,6 +15,8 @@ public class User {
     private String username;
     private String name;
     private String authProvider; // "google", "apple", "email"
+    private String googleId;
+    private boolean emailVerified;
     private String password;
     private String profilePicture;
     @Column(name = "merry_coins")
@@ -79,6 +81,22 @@ public class User {
 
     public void setAuthProvider(String authProvider) {
         this.authProvider = authProvider;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     public String getPassword() {

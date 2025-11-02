@@ -1,4 +1,4 @@
-package com.favour.merrytext.dto;
+package com.favour.merrytext.security;
 
 
 public class AuthRequest {

@@ -1,4 +1,4 @@
-package com.favour.merrytext.util;
+package com.favour.merrytext.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;

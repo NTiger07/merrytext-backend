@@ -1,11 +1,8 @@
-package com.favour.merrytext.controller;
+package com.favour.merrytext.security;
 
-import com.favour.merrytext.util.JwtUtil;
 import com.favour.merrytext.model.User;
 import com.favour.merrytext.repository.UserRepository;
 import com.favour.merrytext.dto.RegisterRequest;
-import com.favour.merrytext.dto.AuthResponse;
-import com.favour.merrytext.dto.AuthRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -22,13 +19,18 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+        private final RefreshTokenService refreshTokenService;
+
 
     public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
-            UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
+            UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, 
+            RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
+
     }
 
     @PostMapping("/register")
@@ -61,9 +63,10 @@ public class AuthController {
         userRepository.save(newUser);
 
         // Generate token
-        String token = jwtUtil.generateToken(newUser.getUsername());
+        String accessToken = jwtUtil.generateToken(newUser.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(newUser.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(token, newUser.getUsername(), newUser.getEmail()));
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), newUser.getUsername(), newUser.getEmail()));
     }
 
     @PostMapping("/login")
@@ -78,9 +81,10 @@ public class AuthController {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String accessToken = jwtUtil.generateToken(user.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), user.getUsername(), user.getEmail()));
     }
 
     @GetMapping("/verify")
@@ -98,5 +102,32 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid token");
         }
+    }
+    
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUsername)
+                .map(username -> {
+                    String newAccessToken = jwtUtil.generateToken(username);
+                    User user = userRepository.findByUsername(username)
+                            .orElseThrow(() -> new RuntimeException("User not found"));
+
+                    return ResponseEntity.ok(new AuthResponse(
+                            newAccessToken,
+                            requestRefreshToken,
+                            user.getUsername(),
+                            user.getEmail()));
+                })
+                .orElseThrow(() -> new RuntimeException("Refresh token not found"));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody RefreshTokenRequest request) {
+        refreshTokenService.revokeToken(request.getRefreshToken());
+        return ResponseEntity.ok("Logged out successfully");
     }
 }

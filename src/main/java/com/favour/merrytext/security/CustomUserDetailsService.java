@@ -1,4 +1,4 @@
-package com.favour.merrytext.service;
+package com.favour.merrytext.security;
 
 
 import com.favour.merrytext.model.User;

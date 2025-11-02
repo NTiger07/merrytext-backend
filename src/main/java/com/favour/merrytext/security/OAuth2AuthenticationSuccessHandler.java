@@ -1,9 +1,7 @@
 package com.favour.merrytext.security;
 
-import com.favour.merrytext.auth.RefreshToken;
-import com.favour.merrytext.auth.RefreshTokenService;
-import com.favour.merrytext.user.User;
-import com.favour.merrytext.user.UserRepository;
+import com.favour.merrytext.model.User;
+import com.favour.merrytext.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +10,6 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
-
 import java.io.IOException;
 import java.util.ArrayList;
 
@@ -51,11 +48,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                         .map(existingUser -> {
                             // Link existing account with Google
                             existingUser.setGoogleId(googleId);
-                            existingUser.setProvider("google");
+                            existingUser.setAuthProvider("google");
                             existingUser.setEmailVerified(emailVerified != null && emailVerified);
-                            if (existingUser.getProfilePic() == null
-                                    || existingUser.getProfilePic().contains("avatar-dafault")) {
-                                existingUser.setProfilePic(picture);
+                            if (existingUser.getProfilePicture() == null
+                                    || existingUser.getProfilePicture().contains("avatar-dafault")) {
+                                existingUser.setProfilePicture(picture);
                             }
                             return userRepository.save(existingUser);
                         })
@@ -65,12 +62,15 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
                             newUser.setGoogleId(googleId);
                             newUser.setEmail(email);
                             newUser.setName(name);
+                            newUser.setAuthProvider("google");
                             newUser.setUsername(generateUsername(email));
-                            newUser.setProfilePic(picture);
-                            newUser.setProvider("google");
+                            newUser.setProfilePicture(picture);
                             newUser.setEmailVerified(emailVerified != null && emailVerified);
-                            newUser.setLinks(new ArrayList<>());
-                            newUser.setSocials(new ArrayList<>());
+                            newUser.setMerryCoins(20);
+                            newUser.setTotalXp(0);
+                            newUser.setLevel(1);
+                            newUser.setTransactions(new ArrayList<>());
+                            newUser.setMessages(new ArrayList<>());
                             return userRepository.save(newUser);
                         }));
 
