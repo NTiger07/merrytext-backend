@@ -48,7 +48,6 @@ public class UserService {
         List<Transaction> userTransactions = transactionRepository
                 .findByOwnerEmailOrderByCreatedAtDesc(user.getEmail());
 
-
         user.setMessages(userMessages);
         user.setTransactions(userTransactions);
 

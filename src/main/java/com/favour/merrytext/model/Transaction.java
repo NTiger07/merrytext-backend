@@ -9,12 +9,10 @@ public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(name = "owner_username")
     private String ownerUsername;
     @Column(name = "owner_email")
     private String ownerEmail;
-
     private String stripePaymentIntentId;
     private Integer amount; // in cents ($2 = 200 cents)
     private Integer coinsPurchased;

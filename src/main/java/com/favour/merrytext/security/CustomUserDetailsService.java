@@ -1,6 +1,5 @@
 package com.favour.merrytext.security;
 
-
 import com.favour.merrytext.model.User;
 import com.favour.merrytext.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;

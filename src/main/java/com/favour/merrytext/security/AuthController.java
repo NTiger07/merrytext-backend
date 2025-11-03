@@ -19,11 +19,10 @@ public class AuthController {
     private final JwtUtil jwtUtil;
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
-        private final RefreshTokenService refreshTokenService;
-
+    private final RefreshTokenService refreshTokenService;
 
     public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
-            UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, 
+            UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
             RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
@@ -73,13 +72,14 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+                    new UsernamePasswordAuthenticationToken(request.getUsernameEmail(), request.getPassword()));
         } catch (BadCredentialsException e) {
             return ResponseEntity.status(401).body("Invalid username or password");
         }
 
-        User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByUsername(request.getUsernameEmail())
+                .orElseGet(() -> userRepository.findByEmail(request.getUsernameEmail())
+                        .orElseThrow(() -> new RuntimeException("User not found")));
 
         String accessToken = jwtUtil.generateToken(user.getUsername());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
@@ -103,7 +103,7 @@ public class AuthController {
             return ResponseEntity.status(401).body("Invalid token");
         }
     }
-    
+
     @PostMapping("/refresh")
     public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest request) {
         String requestRefreshToken = request.getRefreshToken();
