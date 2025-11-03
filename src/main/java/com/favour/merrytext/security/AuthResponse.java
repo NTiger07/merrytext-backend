@@ -1,27 +1,25 @@
 package com.favour.merrytext.security;
 
+import com.favour.merrytext.model.User;
+
 public class AuthResponse {
     private String accessToken;
     private String refreshToken;
-    private String username;
-    private String email;
+    private User user;
     private String tokenType = "Bearer";
 
     public AuthResponse() {
     }
 
-    public AuthResponse(String accessToken, String refreshToken, String username, String email) {
+    public AuthResponse(String accessToken, String refreshToken, User user) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
-        this.username = username;
-        this.email = email;
+        this.user = user;
     }
 
-    // For backward compatibility
-    public AuthResponse(String accessToken, String username, String email) {
+    public AuthResponse(String accessToken, User user) {
         this.accessToken = accessToken;
-        this.username = username;
-        this.email = email;
+        this.user = user;
     }
 
     public String getAccessToken() {
@@ -40,20 +38,12 @@ public class AuthResponse {
         this.refreshToken = refreshToken;
     }
 
-    public String getUsername() {
-        return username;
+    public User getUser() {
+        return user;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getTokenType() {

@@ -38,15 +38,20 @@ public class DataInitializer {
                 user1.setMerryCoins(100);
                 user1.setTotalXp(50);
                 user1.setLevel(1);
+                user1.setEmailVerified(false);
+                user1.setPassword("password123");
+
 
                 User user2 = new User();
                 user2.setEmail("jane@example.com");
                 user2.setUsername("jane");
                 user2.setName("Jane Doe");
                 user2.setAuthProvider("email");
+                user2.setEmailVerified(false);
                 user2.setMerryCoins(150);
                 user2.setTotalXp(75);
                 user2.setLevel(2);
+                user2.setPassword("password123");
 
                 // Save users
                 userRepository.saveAll(Arrays.asList(user1, user2));

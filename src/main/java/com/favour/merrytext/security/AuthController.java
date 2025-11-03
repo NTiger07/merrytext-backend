@@ -66,7 +66,7 @@ public class AuthController {
         String accessToken = jwtUtil.generateToken(newUser.getUsername());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(newUser.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), newUser.getUsername(), newUser.getEmail()));
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), newUser));
     }
 
     @PostMapping("/login")
@@ -84,7 +84,7 @@ public class AuthController {
         String accessToken = jwtUtil.generateToken(user.getUsername());
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), user.getUsername(), user.getEmail()));
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), user));
     }
 
     @GetMapping("/verify")
@@ -96,7 +96,7 @@ public class AuthController {
             if (jwtUtil.validateToken(token, username)) {
                 User user = userRepository.findByUsername(username)
                         .orElseThrow(() -> new RuntimeException("User not found"));
-                return ResponseEntity.ok(new AuthResponse(token, user.getUsername(), user.getEmail()));
+                return ResponseEntity.ok(new AuthResponse(token, user));
             }
             return ResponseEntity.status(401).body("Invalid token");
         } catch (Exception e) {
@@ -119,8 +119,7 @@ public class AuthController {
                     return ResponseEntity.ok(new AuthResponse(
                             newAccessToken,
                             requestRefreshToken,
-                            user.getUsername(),
-                            user.getEmail()));
+                            user));
                 })
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
     }

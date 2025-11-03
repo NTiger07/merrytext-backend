@@ -1,14 +1,15 @@
 package com.favour.merrytext.security;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
 import java.time.Instant;
 
-@Document(collection = "refresh_tokens")
+@Entity
+@Table(name = "refresh_tokens")
 public class RefreshToken {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String token;
     private String username;
     private Instant expiryDate;
@@ -25,11 +26,11 @@ public class RefreshToken {
     }
 
     // Getters and Setters
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
