@@ -1,23 +1,26 @@
 package com.favour.merrytext.security;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class AuthRequest {
-    private String username_email;
+    @JsonProperty("username_email")
+    private String usernameEmail;
     private String password;
 
     public AuthRequest() {
     }
 
-    public AuthRequest(String username_email, String password) {
-        this.username_email = username_email;
+    public AuthRequest(String usernameEmail, String password) {
+        this.usernameEmail = usernameEmail;
         this.password = password;
     }
 
     public String getUsernameEmail() {
-        return username_email;
+        return usernameEmail;
     }
 
-    public void setUsernameEmail(String username_email) {
-        this.username_email = username_email;
+    public void setUsernameEmail(String usernameEmail) {
+        this.usernameEmail = usernameEmail;
     }
 
     public String getPassword() {

@@ -70,13 +70,50 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthRequest request) {
+        // Basic validation
+        if (request.getUsernameEmail() == null || request.getPassword() == null) {
+            return ResponseEntity.badRequest().body("username_email and password are required");
+        }
+
         try {
+            // Try the normal authentication flow first
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getUsernameEmail(), request.getPassword()));
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(401).body("Invalid username or password");
+            // Fallback: check for legacy/non-BCrypt stored passwords and migrate them
+            User user = userRepository.findByUsername(request.getUsernameEmail())
+                    .orElseGet(() -> userRepository.findByEmail(request.getUsernameEmail()).orElse(null));
+
+            if (user == null) {
+                return ResponseEntity.status(401).body("Invalid username or password");
+            }
+
+            String stored = user.getPassword();
+            String raw = request.getPassword();
+
+            boolean matched = false;
+
+            if (stored != null) {
+                // If stored password looks like BCrypt, try matches()
+                if (stored.startsWith("$2a$") || stored.startsWith("$2b$") || stored.startsWith("$2y$")) {
+                    matched = passwordEncoder.matches(raw, stored);
+                } else {
+                    // Legacy plain-text (or other) password: compare raw equality
+                    matched = raw.equals(stored);
+                    if (matched) {
+                        // Migrate to BCrypt
+                        user.setPassword(passwordEncoder.encode(raw));
+                        userRepository.save(user);
+                    }
+                }
+            }
+
+            if (!matched) {
+                return ResponseEntity.status(401).body("Invalid username or password");
+            }
         }
 
+        // At this point authentication succeeded either via auth manager or fallback
         User user = userRepository.findByUsername(request.getUsernameEmail())
                 .orElseGet(() -> userRepository.findByEmail(request.getUsernameEmail())
                         .orElseThrow(() -> new RuntimeException("User not found")));
