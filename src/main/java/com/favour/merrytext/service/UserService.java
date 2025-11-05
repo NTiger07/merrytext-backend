@@ -29,7 +29,7 @@ public class UserService {
 
         // For each user, filter their messages and transactions
         for (User user : users) {
-            List<Message> userMessages = messageRepository.findByOwnerEmailOrderBySentAtDesc(user.getEmail());
+            List<Message> userMessages = messageRepository.findByOwnerEmail(user.getEmail());
             List<Transaction> userTransactions = transactionRepository
                     .findByOwnerEmailOrderByCreatedAtDesc(user.getEmail());
 
@@ -44,7 +44,7 @@ public class UserService {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalStateException(
                 "User does not exist"));
 
-        List<Message> userMessages = messageRepository.findByOwnerEmailOrderBySentAtDesc(user.getEmail());
+        List<Message> userMessages = messageRepository.findByOwnerEmail(user.getEmail());
         List<Transaction> userTransactions = transactionRepository
                 .findByOwnerEmailOrderByCreatedAtDesc(user.getEmail());
 

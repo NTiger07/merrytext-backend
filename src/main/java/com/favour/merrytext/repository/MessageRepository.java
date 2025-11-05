@@ -8,9 +8,6 @@ import com.favour.merrytext.model.Message;
 
 @Repository
 public interface MessageRepository extends JpaRepository<Message, Long> {
-    List<Message> findByOwnerEmailOrderBySentAtDesc(String ownerEmail);
-
+    List<Message> findByOwnerEmail(String ownerEmail);
     Optional<Message> findByMessageUrl(String messageUrl);
-
-    Long countByOwnerEmailAndIsOpenedTrue(String ownerEmail);
 }

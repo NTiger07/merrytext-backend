@@ -2,6 +2,8 @@ package com.favour.merrytext.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Entity
@@ -15,10 +17,16 @@ public class Message {
     private String ownerUsername;
     @Enumerated(EnumType.STRING)
     private TemplateType templateType;
-    private String personalizedText;
     @Column(columnDefinition = "TEXT")
-    private List<String> mediaUrls;
-    private List<String> mediaType;
+    private String personalizedText;
+
+    // Store as comma-separated string in database
+    @Column(name = "media_urls", columnDefinition = "TEXT")
+    private String mediaUrlsString;
+
+    @Column(name = "media_type", columnDefinition = "TEXT")
+    private String mediaTypeString;
+
     private Integer coinsSpent;
     private String messageUrl; // Unique URL for the message
     private Integer timesOpened;
@@ -66,19 +74,33 @@ public class Message {
     }
 
     public List<String> getMediaUrls() {
-        return mediaUrls;
+        if (mediaUrlsString == null || mediaUrlsString.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.asList(mediaUrlsString.split("\\|\\|"));
     }
 
     public void setMediaUrls(List<String> mediaUrls) {
-        this.mediaUrls = mediaUrls;
+        if (mediaUrls == null || mediaUrls.isEmpty()) {
+            this.mediaUrlsString = "";
+        } else {
+            this.mediaUrlsString = String.join("||", mediaUrls);
+        }
     }
 
     public List<String> getMediaType() {
-        return mediaType;
+        if (mediaTypeString == null || mediaTypeString.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return Arrays.asList(mediaTypeString.split("\\|\\|"));
     }
 
     public void setMediaType(List<String> mediaType) {
-        this.mediaType = mediaType;
+        if (mediaType == null || mediaType.isEmpty()) {
+            this.mediaTypeString = "";
+        } else {
+            this.mediaTypeString = String.join("||", mediaType);
+        }
     }
 
     public Integer getCoinsSpent() {

@@ -46,9 +46,8 @@ public class MessageService {
 
         // Calculate coins required
         int coinsRequired = calculateCoinsRequired(templateType, mediaUrls != null && !mediaUrls.isEmpty());
-        User user = userRepository.findByEmail(ownerEmail)
+        User user = userRepository.findByUsername(ownerUsername)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
 
         // Check if user has enough coins
         if (user.getMerryCoins() < coinsRequired) {
@@ -65,8 +64,8 @@ public class MessageService {
         message.setOwnerEmail(user.getEmail());
         message.setTemplateType(TemplateType.valueOf(templateType));
         message.setPersonalizedText(personalizedText);
-        message.setMediaUrls(mediaUrls); 
-        message.setMediaType(mediaType); 
+        message.setMediaUrls(mediaUrls);
+        message.setMediaType(mediaType);
         message.setCoinsSpent(coinsRequired);
         message.setMessageUrl(generateUniqueMessageUrl());
         message.setTimesOpened(0);
@@ -90,5 +89,10 @@ public class MessageService {
             default:
                 return baseCost;
         }
+    }
+
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }

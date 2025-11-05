@@ -38,12 +38,16 @@ public class MessageController {
                     request.getMediaUrls(),
                     request.getMediaType());
 
+            // Fetch the user to get updated coin balance and ensure we have the user object
+            User messageOwner = messageService.getUserByUsername(request.getOwnerUsername());
+
             Map<String, Object> response = new HashMap<>();
             response.put("message", message);
             response.put("uniqueUrl", message.getMessageUrl()); // Just the unique URL part
             response.put("shareableUrl", linkGenerationService.getFullViewUrl(message.getMessageUrl())); // Full URL
-            response.put("shareableText", linkGenerationService.generateShareableText(user, message.getMessageUrl()));
-            response.put("remainingCoins", user.getMerryCoins());
+            response.put("shareableText",
+                    linkGenerationService.generateShareableText(messageOwner, message.getMessageUrl()));
+            response.put("remainingCoins", messageOwner.getMerryCoins());
 
             return ResponseEntity.ok(ApiResponse.success(response));
 
