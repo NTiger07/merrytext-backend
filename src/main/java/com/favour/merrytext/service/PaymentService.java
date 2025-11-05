@@ -6,8 +6,8 @@ import com.favour.merrytext.repository.UserRepository;
 import com.favour.merrytext.repository.TransactionRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;
-import com.stripe.model.PaymentIntent;
-import com.stripe.param.PaymentIntentCreateParams;
+import com.stripe.model.checkout.Session;
+import com.stripe.param.checkout.SessionCreateParams;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +19,9 @@ public class PaymentService {
 
         @Value("${stripe.secret.key}")
         private String stripeSecretKey;
+
+        @Value("${app.frontend.url}")
+        private String frontendUrl;
 
         private final UserRepository userRepository;
         private final TransactionRepository transactionRepository;
@@ -36,38 +39,95 @@ public class PaymentService {
                 this.levelService = levelService;
         }
 
-        @Transactional
-        public Map<String, Object> processPayment(User user, Integer amount, String paymentMethodId)
+        public Map<String, Object> createCheckoutSession(String ownerEmail, String ownerUsername, Integer amount,
+                        Integer coins,
+                        String priceId)
                         throws StripeException {
                 Stripe.apiKey = stripeSecretKey;
 
                 // Calculate coins: $2 = 200 cents = 30 coins
                 int coinsPurchased = (amount * 30) / 200;
 
-                // Create payment intent
-                PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-                                .setAmount(amount.longValue())
-                                .setCurrency("usd")
-                                .setPaymentMethod(paymentMethodId)
-                                .setConfirm(true)
-                                .setReturnUrl("https://your-app.com/payment-success")
-                                .setAutomaticPaymentMethods(
-                                                PaymentIntentCreateParams.AutomaticPaymentMethods.builder()
-                                                                .setEnabled(true)
-                                                                .setAllowRedirects(
-                                                                                PaymentIntentCreateParams.AutomaticPaymentMethods.AllowRedirects.NEVER)
+                User user = userRepository.findByUsername(ownerUsername)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+                // Create checkout session
+                SessionCreateParams params = SessionCreateParams.builder()
+                                .setMode(SessionCreateParams.Mode.PAYMENT)
+                                .setSuccessUrl(frontendUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}")
+                                .setCancelUrl(frontendUrl + "/payment/cancel")
+                                .addLineItem(
+                                                SessionCreateParams.LineItem.builder()
+                                                                .setQuantity(1L)
+                                                                .setPriceData(
+                                                                                SessionCreateParams.LineItem.PriceData
+                                                                                                .builder()
+                                                                                                .setCurrency("usd")
+                                                                                                .setUnitAmount(amount
+                                                                                                                .longValue())
+                                                                                                .setProductData(
+                                                                                                                SessionCreateParams.LineItem.PriceData.ProductData
+                                                                                                                                .builder()
+                                                                                                                                .setName(coinsPurchased
+                                                                                                                                                + " Merry Coins")
+                                                                                                                                .setDescription("Purchase "
+                                                                                                                                                + coinsPurchased
+                                                                                                                                                + " coins for your MerryText account")
+                                                                                                                                .build())
+                                                                                                .build())
                                                                 .build())
+                                .setCustomerEmail(ownerEmail)
+                                .putMetadata("username", ownerUsername)
+                                .putMetadata("email", ownerEmail)
+                                .putMetadata("coins", String.valueOf(coinsPurchased))
+                                .putMetadata("amount", String.valueOf(amount))
                                 .build();
 
-                PaymentIntent paymentIntent = PaymentIntent.create(params);
+                Session session = Session.create(params);
 
-                // Create transaction record
+                // Create pending transaction record
                 Transaction transaction = new Transaction();
                 transaction.setOwnerUsername(user.getUsername());
                 transaction.setOwnerEmail(user.getEmail());
-                transaction.setStripePaymentIntentId(paymentIntent.getId());
+                transaction.setStripePaymentIntentId(session.getId());
                 transaction.setAmount(amount);
                 transaction.setCoinsPurchased(coinsPurchased);
+                transaction.setStatus("pending");
+                transactionRepository.save(transaction);
+
+                Map<String, Object> response = new HashMap<>();
+                response.put("sessionId", session.getId());
+                response.put("url", session.getUrl());
+                response.put("coinsPurchased", coinsPurchased);
+
+                return response;
+        }
+
+        @Transactional
+        public void completePayment(String sessionId) throws StripeException {
+                Stripe.apiKey = stripeSecretKey;
+
+                // Retrieve the session to get metadata
+                Session session = Session.retrieve(sessionId);
+
+                if (!"paid".equals(session.getPaymentStatus())) {
+                        throw new IllegalStateException("Payment not completed");
+                }
+
+                String username = session.getMetadata().get("username");
+                int coinsPurchased = Integer.parseInt(session.getMetadata().get("coins"));
+
+                User user = userRepository.findByUsername(username)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+                // Update transaction status
+                Transaction transaction = transactionRepository.findByStripePaymentIntentId(sessionId)
+                                .orElseThrow(() -> new IllegalArgumentException("Transaction not found"));
+
+                if ("completed".equals(transaction.getStatus())) {
+                        return; // Already processed
+                }
+
                 transaction.setStatus("completed");
                 transactionRepository.save(transaction);
 
@@ -79,13 +139,5 @@ public class PaymentService {
                 statsService.incrementCoinsEarned(user.getId(), coinsPurchased);
                 achievementService.awardXp(user, levelService.getXpForAction("PURCHASE_COINS"));
                 achievementService.checkAndUpdateAchievements(user.getId());
-
-                Map<String, Object> response = new HashMap<>();
-                response.put("paymentIntentId", paymentIntent.getId());
-                response.put("coinsPurchased", coinsPurchased);
-                response.put("newBalance", user.getMerryCoins());
-                response.put("status", paymentIntent.getStatus());
-
-                return response;
         }
 }

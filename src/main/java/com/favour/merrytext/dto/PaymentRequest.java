@@ -1,11 +1,30 @@
 package com.favour.merrytext.dto;
 
 public class PaymentRequest {
+    private String ownerEmail;
+    private String ownerUsername;
     private Integer amount; // in cents
-    private String paymentMethodId;
+    private Integer coins;
+    private String priceId;
     private String currency = "usd";
 
     // Getters and Setters
+    public String getOwnerUsername() {
+        return ownerUsername;
+    }
+
+    public void setOwnerUsername(String ownerUsername) {
+        this.ownerUsername = ownerUsername;
+    }
+
+    public String getOwnerEmail() {
+        return ownerEmail;
+    }
+
+    public void setOwnerEmail(String ownerEmail) {
+        this.ownerEmail = ownerEmail;
+    }
+
     public Integer getAmount() {
         return amount;
     }
@@ -14,12 +33,20 @@ public class PaymentRequest {
         this.amount = amount;
     }
 
-    public String getPaymentMethodId() {
-        return paymentMethodId;
+    public Integer getCoins() {
+        return coins;
     }
 
-    public void setPaymentMethodId(String paymentMethodId) {
-        this.paymentMethodId = paymentMethodId;
+    public void setCoins(Integer coins) {
+        this.coins = coins;
+    }
+
+    public String getPriceId() {
+        return priceId;
+    }
+
+    public void setPriceId(String priceId) {
+        this.priceId = priceId;
     }
 
     public String getCurrency() {
