@@ -2,6 +2,7 @@ package com.favour.merrytext.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "messages")
@@ -9,27 +10,19 @@ public class Message {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     @Column(name = "owner_email")
     private String ownerEmail;
     private String ownerUsername;
-
-    private String recipientName;
-    private String recipientPhone;
-    private String relationshipType; // "family", "friend", "colleague", etc.
-
     @Enumerated(EnumType.STRING)
     private TemplateType templateType;
-
     private String personalizedText;
-    private String mediaUrl; // For uploaded photos/videos/audio
-    private String mediaType; // "photo", "video", "audio"
-
+    @Column(columnDefinition = "TEXT")
+    private List<String> mediaUrls;
+    private List<String> mediaType;
     private Integer coinsSpent;
     private String messageUrl; // Unique URL for the message
-    private Boolean isOpened = false;
-    private LocalDateTime sentAt;
-    private LocalDateTime openedAt;
+    private Integer timesOpened;
+    private LocalDateTime createdAt;
 
     // Getters and Setters
     public Long getId() {
@@ -56,30 +49,6 @@ public class Message {
         this.ownerEmail = ownerEmail;
     }
 
-    public String getRecipientName() {
-        return recipientName;
-    }
-
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
-    }
-
-    public String getRecipientPhone() {
-        return recipientPhone;
-    }
-
-    public void setRecipientPhone(String recipientPhone) {
-        this.recipientPhone = recipientPhone;
-    }
-
-    public String getRelationshipType() {
-        return relationshipType;
-    }
-
-    public void setRelationshipType(String relationshipType) {
-        this.relationshipType = relationshipType;
-    }
-
     public TemplateType getTemplateType() {
         return templateType;
     }
@@ -96,19 +65,19 @@ public class Message {
         this.personalizedText = personalizedText;
     }
 
-    public String getMediaUrl() {
-        return mediaUrl;
+    public List<String> getMediaUrls() {
+        return mediaUrls;
     }
 
-    public void setMediaUrl(String mediaUrl) {
-        this.mediaUrl = mediaUrl;
+    public void setMediaUrls(List<String> mediaUrls) {
+        this.mediaUrls = mediaUrls;
     }
 
-    public String getMediaType() {
+    public List<String> getMediaType() {
         return mediaType;
     }
 
-    public void setMediaType(String mediaType) {
+    public void setMediaType(List<String> mediaType) {
         this.mediaType = mediaType;
     }
 
@@ -128,27 +97,19 @@ public class Message {
         this.messageUrl = messageUrl;
     }
 
-    public Boolean getIsOpened() {
-        return isOpened;
+    public Integer getTimesOpened() {
+        return timesOpened;
     }
 
-    public void setIsOpened(Boolean isOpened) {
-        this.isOpened = isOpened;
+    public void setTimesOpened(Integer timesOpened) {
+        this.timesOpened = timesOpened;
     }
 
-    public LocalDateTime getSentAt() {
-        return sentAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setSentAt(LocalDateTime sentAt) {
-        this.sentAt = sentAt;
-    }
-
-    public LocalDateTime getOpenedAt() {
-        return openedAt;
-    }
-
-    public void setOpenedAt(LocalDateTime openedAt) {
-        this.openedAt = openedAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

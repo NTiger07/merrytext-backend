@@ -1,36 +1,30 @@
 package com.favour.merrytext.dto;
 
+import java.util.List;
+
 public class CreateMessageRequest {
-    private String recipientName;
-    private String recipientPhone;
-    private String relationshipType;
+    private String ownerEmail;
+    private String ownerUsername;
     private String templateType;
     private String personalizedText;
-    private String mediaType; // "photo", "video", "audio"
+    private List<String> mediaUrls; // Array of media URLs uploaded by frontend
+    private List<String> mediaType; // "photo", "video", "audio", "mixed"
 
     // Getters and Setters
-    public String getRecipientName() {
-        return recipientName;
+    public String getOwnerUsername() {
+        return ownerUsername;
     }
 
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
+    public void setOwnerUsername(String owneUsername) {
+        this.ownerUsername = owneUsername;
     }
 
-    public String getRecipientPhone() {
-        return recipientPhone;
+    public String getOwnerEmail() {
+        return ownerEmail;
     }
 
-    public void setRecipientPhone(String recipientPhone) {
-        this.recipientPhone = recipientPhone;
-    }
-
-    public String getRelationshipType() {
-        return relationshipType;
-    }
-
-    public void setRelationshipType(String relationshipType) {
-        this.relationshipType = relationshipType;
+    public void setOwnerEmail(String ownerEmail) {
+        this.ownerEmail = ownerEmail;
     }
 
     public String getTemplateType() {
@@ -49,11 +43,19 @@ public class CreateMessageRequest {
         this.personalizedText = personalizedText;
     }
 
-    public String getMediaType() {
+    public List<String> getMediaUrls() {
+        return mediaUrls;
+    }
+
+    public void setMediaUrls(List<String> mediaUrls) {
+        this.mediaUrls = mediaUrls;
+    }
+
+    public List<String> getMediaType() {
         return mediaType;
     }
 
-    public void setMediaType(String mediaType) {
+    public void setMediaType(List<String> mediaType) {
         this.mediaType = mediaType;
     }
 }

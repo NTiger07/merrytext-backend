@@ -4,13 +4,11 @@ import com.favour.merrytext.model.User;
 import com.favour.merrytext.model.Message;
 import com.favour.merrytext.dto.ApiResponse;
 import com.favour.merrytext.dto.CreateMessageRequest;
-import com.favour.merrytext.dto.BulkMessageRequest;
 import com.favour.merrytext.service.MessageService;
 import com.favour.merrytext.service.LinkGenerationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,56 +24,24 @@ public class MessageController {
         this.linkGenerationService = linkGenerationService;
     }
 
-    @PostMapping("/send")
+    @PostMapping("/create")
     public ResponseEntity<ApiResponse<Map<String, Object>>> sendMessage(
             @AuthenticationPrincipal User user,
-            @RequestPart("data") CreateMessageRequest request,
-            @RequestPart(value = "media", required = false) MultipartFile mediaFile) {
+            @RequestBody CreateMessageRequest request) {
 
         try {
             Message message = messageService.createMessage(
-                    user,
-                    request.getRecipientName(),
-                    request.getRecipientPhone(),
-                    request.getRelationshipType(),
+                    request.getOwnerEmail(),
+                    request.getOwnerUsername(),
                     request.getTemplateType(),
                     request.getPersonalizedText(),
-                    mediaFile);
+                    request.getMediaUrls(),
+                    request.getMediaType());
 
             Map<String, Object> response = new HashMap<>();
             response.put("message", message);
-            response.put("shareableUrl", linkGenerationService.getFullViewUrl(message.getMessageUrl()));
-            response.put("shareableText", linkGenerationService.generateShareableText(user, message.getMessageUrl()));
-            response.put("remainingCoins", user.getMerryCoins());
-
-            return ResponseEntity.ok(ApiResponse.success(response));
-
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body(ApiResponse.error(e.getMessage()));
-        }
-    }
-
-    @PostMapping("/send-bulk")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> sendBulkMessage(
-            @AuthenticationPrincipal User user,
-            @RequestPart("data") BulkMessageRequest request,
-            @RequestPart(value = "media", required = false) MultipartFile mediaFile) {
-
-        try {
-            Message message = messageService.createBulkMessage(
-                    user,
-                    request.getRecipientNames(),
-                    request.getRecipientPhones(),
-                    request.getRelationshipType(),
-                    request.getTemplateType(),
-                    request.getPersonalizedText(),
-                    mediaFile);
-
-            Map<String, Object> response = new HashMap<>();
-            response.put("message", message);
-            response.put("totalRecipients", request.getRecipientNames().length);
-            response.put("shareableUrl", linkGenerationService.getFullViewUrl(message.getMessageUrl()));
+            response.put("uniqueUrl", message.getMessageUrl()); // Just the unique URL part
+            response.put("shareableUrl", linkGenerationService.getFullViewUrl(message.getMessageUrl())); // Full URL
             response.put("shareableText", linkGenerationService.generateShareableText(user, message.getMessageUrl()));
             response.put("remainingCoins", user.getMerryCoins());
 
