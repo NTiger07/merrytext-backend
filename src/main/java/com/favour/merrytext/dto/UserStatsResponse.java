@@ -6,8 +6,15 @@ public class UserStatsResponse {
     private Integer merryCoins;
     private Integer totalXp;
     private Integer level;
-    private Long totalMessagesSent;
-    private Long totalMessagesOpened;
+    private Integer xpToNextLevel;
+    private Double progressToNextLevel;
+    private Integer totalMessagesSent;
+    private Integer totalMessagesViewed;
+    private Integer totalCoinsEarned;
+    private Integer totalCoinsSpent;
+    private Integer uniqueRecipients;
+    private Integer currentStreak;
+    private Integer longestStreak;
 
     // Getters and Setters
     public Long getUserId() {
@@ -50,19 +57,75 @@ public class UserStatsResponse {
         this.level = level;
     }
 
-    public Long getTotalMessagesSent() {
+    public Integer getXpToNextLevel() {
+        return xpToNextLevel;
+    }
+
+    public void setXpToNextLevel(Integer xpToNextLevel) {
+        this.xpToNextLevel = xpToNextLevel;
+    }
+
+    public Double getProgressToNextLevel() {
+        return progressToNextLevel;
+    }
+
+    public void setProgressToNextLevel(Double progressToNextLevel) {
+        this.progressToNextLevel = progressToNextLevel;
+    }
+
+    public Integer getTotalMessagesSent() {
         return totalMessagesSent;
     }
 
-    public void setTotalMessagesSent(Long totalMessagesSent) {
+    public void setTotalMessagesSent(Integer totalMessagesSent) {
         this.totalMessagesSent = totalMessagesSent;
     }
 
-    public Long getTotalMessagesOpened() {
-        return totalMessagesOpened;
+    public Integer getTotalMessagesViewed() {
+        return totalMessagesViewed;
     }
 
-    public void setTotalMessagesOpened(Long totalMessagesOpened) {
-        this.totalMessagesOpened = totalMessagesOpened;
+    public void setTotalMessagesViewed(Integer totalMessagesViewed) {
+        this.totalMessagesViewed = totalMessagesViewed;
+    }
+
+    public Integer getTotalCoinsEarned() {
+        return totalCoinsEarned;
+    }
+
+    public void setTotalCoinsEarned(Integer totalCoinsEarned) {
+        this.totalCoinsEarned = totalCoinsEarned;
+    }
+
+    public Integer getTotalCoinsSpent() {
+        return totalCoinsSpent;
+    }
+
+    public void setTotalCoinsSpent(Integer totalCoinsSpent) {
+        this.totalCoinsSpent = totalCoinsSpent;
+    }
+
+    public Integer getUniqueRecipients() {
+        return uniqueRecipients;
+    }
+
+    public void setUniqueRecipients(Integer uniqueRecipients) {
+        this.uniqueRecipients = uniqueRecipients;
+    }
+
+    public Integer getCurrentStreak() {
+        return currentStreak;
+    }
+
+    public void setCurrentStreak(Integer currentStreak) {
+        this.currentStreak = currentStreak;
+    }
+
+    public Integer getLongestStreak() {
+        return longestStreak;
+    }
+
+    public void setLongestStreak(Integer longestStreak) {
+        this.longestStreak = longestStreak;
     }
 }

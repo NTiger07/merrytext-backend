@@ -3,6 +3,8 @@ package com.favour.merrytext.security;
 import com.favour.merrytext.model.User;
 import com.favour.merrytext.repository.UserRepository;
 import com.favour.merrytext.dto.RegisterRequest;
+import com.favour.merrytext.service.StatsService;
+import com.favour.merrytext.service.AchievementService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -20,16 +22,20 @@ public class AuthController {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
+    private final StatsService statsService;
+    private final AchievementService achievementService;
 
     public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
             UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
-            RefreshTokenService refreshTokenService) {
+            RefreshTokenService refreshTokenService, StatsService statsService,
+            AchievementService achievementService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenService = refreshTokenService;
-
+        this.statsService = statsService;
+        this.achievementService = achievementService;
     }
 
     @PostMapping("/register")
@@ -59,13 +65,17 @@ public class AuthController {
         newUser.setTransactions(new ArrayList<>());
         newUser.setMessages(new ArrayList<>());
 
-        userRepository.save(newUser);
+        User savedUser = userRepository.save(newUser);
+
+        // Initialize stats and achievements for new user
+        statsService.initializeUserStats(savedUser.getId());
+        achievementService.initializeUserAchievements(savedUser.getId());
 
         // Generate token
-        String accessToken = jwtUtil.generateToken(newUser.getUsername());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(newUser.getUsername());
+        String accessToken = jwtUtil.generateToken(savedUser.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), newUser));
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), savedUser));
     }
 
     @PostMapping("/login")

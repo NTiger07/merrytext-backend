@@ -16,10 +16,18 @@ public class MessageService {
 
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
+    private final StatsService statsService;
+    private final AchievementService achievementService;
+    private final LevelService levelService;
 
-    public MessageService(UserRepository userRepository, MessageRepository messageRepository) {
+    public MessageService(UserRepository userRepository, MessageRepository messageRepository,
+            StatsService statsService, AchievementService achievementService,
+            LevelService levelService) {
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
+        this.statsService = statsService;
+        this.achievementService = achievementService;
+        this.levelService = levelService;
     }
 
     /**
@@ -71,7 +79,18 @@ public class MessageService {
         message.setTimesOpened(0);
         message.setCreatedAt(LocalDateTime.now());
 
-        return messageRepository.save(message);
+        Message savedMessage = messageRepository.save(message);
+
+        // Update user stats
+        statsService.incrementMessageSent(user.getId(), coinsRequired);
+
+        // Award XP for sending message
+        achievementService.awardXp(user, levelService.getXpForAction("MESSAGE_SENT"));
+
+        // Check and update achievements
+        achievementService.checkAndUpdateAchievements(user.getId());
+
+        return savedMessage;
     }
 
     private int calculateCoinsRequired(String templateType, boolean hasMedia) {
@@ -94,5 +113,49 @@ public class MessageService {
     public User getUserByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
+    }
+
+    public Message getMessageByUrl(String messageUrl) {
+        return messageRepository.findByMessageUrl(messageUrl)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found"));
+    }
+
+    @Transactional
+    public void incrementTimesOpened(String messageUrl) {
+        Message message = getMessageByUrl(messageUrl);
+        message.setTimesOpened(message.getTimesOpened() + 1);
+        messageRepository.save(message);
+
+        // Find message owner and update their stats
+        User owner = userRepository.findByUsername(message.getOwnerUsername())
+                .orElse(null);
+        if (owner != null) {
+            statsService.incrementMessageViewed(owner.getId());
+            achievementService.awardXp(owner, levelService.getXpForAction("MESSAGE_VIEWED"));
+        }
+    }
+
+    @Transactional
+    public Message updateMessage(String messageUrl, String templateType,
+            String personalizedText, List<String> mediaUrls, List<String> mediaType) {
+
+        // Fetch existing message
+        Message message = getMessageByUrl(messageUrl);
+
+        // Update fields (keeping the same URL and other metadata)
+        if (templateType != null) {
+            message.setTemplateType(TemplateType.valueOf(templateType));
+        }
+        if (personalizedText != null) {
+            message.setPersonalizedText(personalizedText);
+        }
+        if (mediaUrls != null) {
+            message.setMediaUrls(mediaUrls);
+        }
+        if (mediaType != null) {
+            message.setMediaType(mediaType);
+        }
+
+        return messageRepository.save(message);
     }
 }

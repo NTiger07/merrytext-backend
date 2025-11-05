@@ -22,10 +22,18 @@ public class PaymentService {
 
         private final UserRepository userRepository;
         private final TransactionRepository transactionRepository;
+        private final StatsService statsService;
+        private final AchievementService achievementService;
+        private final LevelService levelService;
 
-        public PaymentService(UserRepository userRepository, TransactionRepository transactionRepository) {
+        public PaymentService(UserRepository userRepository, TransactionRepository transactionRepository,
+                        StatsService statsService, AchievementService achievementService,
+                        LevelService levelService) {
                 this.userRepository = userRepository;
                 this.transactionRepository = transactionRepository;
+                this.statsService = statsService;
+                this.achievementService = achievementService;
+                this.levelService = levelService;
         }
 
         @Transactional
@@ -66,6 +74,11 @@ public class PaymentService {
                 // Update user's coin balance
                 user.setMerryCoins(user.getMerryCoins() + coinsPurchased);
                 userRepository.save(user);
+
+                // Update stats and award XP
+                statsService.incrementCoinsEarned(user.getId(), coinsPurchased);
+                achievementService.awardXp(user, levelService.getXpForAction("PURCHASE_COINS"));
+                achievementService.checkAndUpdateAchievements(user.getId());
 
                 Map<String, Object> response = new HashMap<>();
                 response.put("paymentIntentId", paymentIntent.getId());
