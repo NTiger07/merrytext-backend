@@ -1,5 +1,6 @@
 package com.favour.merrytext.model;
 
+import com.favour.merrytext.dto.AchievementResponse;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,6 +29,14 @@ public class User {
     private List<Message> messages = new ArrayList<>();
     @Transient
     private List<Transaction> transactions = new ArrayList<>();
+    @Transient
+    private List<AchievementResponse> achievements = new ArrayList<>();
+    @Transient
+    private UserStats stats;
+    @Transient
+    private Integer xpToNextLevel;
+    @Transient
+    private Double progressToNextLevel;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -169,5 +178,37 @@ public class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<AchievementResponse> getAchievements() {
+        return achievements;
+    }
+
+    public void setAchievements(List<AchievementResponse> achievements) {
+        this.achievements = achievements;
+    }
+
+    public UserStats getStats() {
+        return stats;
+    }
+
+    public void setStats(UserStats stats) {
+        this.stats = stats;
+    }
+
+    public Integer getXpToNextLevel() {
+        return xpToNextLevel;
+    }
+
+    public void setXpToNextLevel(Integer xpToNextLevel) {
+        this.xpToNextLevel = xpToNextLevel;
+    }
+
+    public Double getProgressToNextLevel() {
+        return progressToNextLevel;
+    }
+
+    public void setProgressToNextLevel(Double progressToNextLevel) {
+        this.progressToNextLevel = progressToNextLevel;
     }
 }

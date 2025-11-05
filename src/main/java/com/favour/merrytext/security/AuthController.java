@@ -5,6 +5,7 @@ import com.favour.merrytext.repository.UserRepository;
 import com.favour.merrytext.dto.RegisterRequest;
 import com.favour.merrytext.service.StatsService;
 import com.favour.merrytext.service.AchievementService;
+import com.favour.merrytext.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -24,11 +25,12 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final StatsService statsService;
     private final AchievementService achievementService;
+    private final UserService userService;
 
     public AuthController(AuthenticationManager authenticationManager, JwtUtil jwtUtil,
             UserRepository userRepository, BCryptPasswordEncoder passwordEncoder,
             RefreshTokenService refreshTokenService, StatsService statsService,
-            AchievementService achievementService) {
+            AchievementService achievementService, UserService userService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
@@ -36,6 +38,7 @@ public class AuthController {
         this.refreshTokenService = refreshTokenService;
         this.statsService = statsService;
         this.achievementService = achievementService;
+        this.userService = userService;
     }
 
     @PostMapping("/register")
@@ -71,11 +74,14 @@ public class AuthController {
         statsService.initializeUserStats(savedUser.getId());
         achievementService.initializeUserAchievements(savedUser.getId());
 
-        // Generate token
-        String accessToken = jwtUtil.generateToken(savedUser.getUsername());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getUsername());
+        // Populate user data (stats, achievements, XP progress)
+        User populatedUser = userService.getUserByUsername(savedUser.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), savedUser));
+        // Generate token
+        String accessToken = jwtUtil.generateToken(populatedUser.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(populatedUser.getUsername());
+
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), populatedUser));
     }
 
     @PostMapping("/login")
@@ -128,10 +134,13 @@ public class AuthController {
                 .orElseGet(() -> userRepository.findByEmail(request.getUsernameEmail())
                         .orElseThrow(() -> new RuntimeException("User not found")));
 
-        String accessToken = jwtUtil.generateToken(user.getUsername());
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
+        // Populate user data (stats, achievements, XP progress)
+        User populatedUser = userService.getUserByUsername(user.getUsername());
 
-        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), user));
+        String accessToken = jwtUtil.generateToken(populatedUser.getUsername());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(populatedUser.getUsername());
+
+        return ResponseEntity.ok(new AuthResponse(accessToken, refreshToken.getToken(), populatedUser));
     }
 
     @GetMapping("/verify")
@@ -141,8 +150,8 @@ public class AuthController {
             String username = jwtUtil.extractUsername(token);
 
             if (jwtUtil.validateToken(token, username)) {
-                User user = userRepository.findByUsername(username)
-                        .orElseThrow(() -> new RuntimeException("User not found"));
+                // Populate user data (stats, achievements, XP progress)
+                User user = userService.getUserByUsername(username);
                 return ResponseEntity.ok(new AuthResponse(token, user));
             }
             return ResponseEntity.status(401).body("Invalid token");
@@ -160,8 +169,8 @@ public class AuthController {
                 .map(RefreshToken::getUsername)
                 .map(username -> {
                     String newAccessToken = jwtUtil.generateToken(username);
-                    User user = userRepository.findByUsername(username)
-                            .orElseThrow(() -> new RuntimeException("User not found"));
+                    // Populate user data (stats, achievements, XP progress)
+                    User user = userService.getUserByUsername(username);
 
                     return ResponseEntity.ok(new AuthResponse(
                             newAccessToken,
