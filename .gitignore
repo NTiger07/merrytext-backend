@@ -35,3 +35,4 @@ build/
 application.properties
 *.txt
 ACHIEVEMENTS_SYSTEM.md
+RENDER_DEPLOY.md
