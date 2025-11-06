@@ -31,10 +31,15 @@ public class PaymentController {
 
     @PostMapping("/create-checkout-session")
     public ResponseEntity<ApiResponse<Map<String, Object>>> addCoins(
-            @AuthenticationPrincipal User user,
             @RequestBody PaymentRequest paymentRequest) {
 
         try {
+            // Validate that username and email are provided in request
+            if (paymentRequest.getOwnerUsername() == null || paymentRequest.getOwnerEmail() == null) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Username and email are required"));
+            }
+
             Map<String, Object> result = paymentService.createCheckoutSession(
                     paymentRequest.getOwnerEmail(),
                     paymentRequest.getOwnerUsername(),
@@ -47,6 +52,9 @@ public class PaymentController {
         } catch (StripeException e) {
             return ResponseEntity.badRequest()
                     .body(ApiResponse.error("Payment failed: " + e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error(e.getMessage()));
         }
     }
 
