@@ -53,29 +53,28 @@ public class PaymentService {
 
                 // Create checkout session
                 SessionCreateParams params = SessionCreateParams.builder()
-                                .setMode(SessionCreateParams.Mode.PAYMENT)
-                                .setSuccessUrl(frontendUrl + "/payment/success?session_id={CHECKOUT_SESSION_ID}")
-                                .setCancelUrl(frontendUrl + "/payment/cancel")
-                                .addLineItem(
-                                                SessionCreateParams.LineItem.builder()
-                                                                .setQuantity(1L)
-                                                                .setPriceData(
-                                                                                SessionCreateParams.LineItem.PriceData
-                                                                                                .builder()
-                                                                                                .setCurrency("usd")
-                                                                                                .setUnitAmount(amount
-                                                                                                                .longValue())
-                                                                                                .setProductData(
-                                                                                                                SessionCreateParams.LineItem.PriceData.ProductData
-                                                                                                                                .builder()
-                                                                                                                                .setName(coinsPurchased
-                                                                                                                                                + " Merry Coins")
-                                                                                                                                .setDescription("Purchase "
-                                                                                                                                                + coinsPurchased
-                                                                                                                                                + " coins for your MerryText account")
-                                                                                                                                .build())
-                                                                                                .build())
-                                                                .build())
+                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.CARD)
+                .addPaymentMethodType(SessionCreateParams.PaymentMethodType.ALIPAY)
+                .setMode(SessionCreateParams.Mode.PAYMENT)
+                .setSuccessUrl("https://merrytext.vercel.app/payment/success")
+                .setCancelUrl("https://merrytext.vercel.app/payment/cancel")
+                .addLineItem(
+                        SessionCreateParams.LineItem.builder()
+                                .setPriceData(
+                                        SessionCreateParams.LineItem.PriceData.builder()
+                                                .setCurrency("usd")
+                                                .setUnitAmount(100L)
+                                                .setProductData(
+                                                        SessionCreateParams.LineItem.PriceData.ProductData.builder()
+                                                                .setName("Test Product")
+                                                                .build()
+                                                )
+                                                .build()
+                                ).setQuantity(1L)
+                                .build()
+                )
+
+
                                 .setCustomerEmail(ownerEmail)
                                 .putMetadata("username", ownerUsername)
                                 .putMetadata("email", ownerEmail)
