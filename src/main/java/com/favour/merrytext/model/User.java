@@ -1,6 +1,8 @@
 package com.favour.merrytext.model;
 
 import com.favour.merrytext.dto.AchievementResponse;
+import com.favour.merrytext.payment.Transaction;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;

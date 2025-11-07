@@ -1,6 +1,5 @@
 package com.favour.merrytext.security;
 
-import com.favour.merrytext.security.JwtUtil;
 import com.favour.merrytext.model.User;
 import com.favour.merrytext.repository.UserRepository;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 
 @RestController
 @RequestMapping("merrytext/api/v1/auth")

@@ -1,4 +1,4 @@
-package com.favour.merrytext.dto;
+package com.favour.merrytext.payment;
 
 public class PaymentRequest {
     private String ownerEmail;

@@ -1,8 +1,10 @@
-package com.favour.merrytext.service;
+package com.favour.merrytext.payment;
 
 import com.favour.merrytext.model.User;
-import com.favour.merrytext.model.Transaction;
 import com.favour.merrytext.repository.UserRepository;
+import com.favour.merrytext.service.AchievementService;
+import com.favour.merrytext.service.LevelService;
+import com.favour.merrytext.service.StatsService;
 import com.favour.merrytext.repository.TransactionRepository;
 import com.stripe.Stripe;
 import com.stripe.exception.StripeException;

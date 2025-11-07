@@ -1,9 +1,7 @@
-package com.favour.merrytext.controller;
+package com.favour.merrytext.payment;
 
 import com.favour.merrytext.model.User;
 import com.favour.merrytext.dto.ApiResponse;
-import com.favour.merrytext.dto.PaymentRequest;
-import com.favour.merrytext.service.PaymentService;
 import com.stripe.exception.StripeException;
 import com.stripe.exception.SignatureVerificationException;
 import com.stripe.model.Event;
@@ -11,7 +9,6 @@ import com.stripe.model.checkout.Session;
 import com.stripe.net.Webhook;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;

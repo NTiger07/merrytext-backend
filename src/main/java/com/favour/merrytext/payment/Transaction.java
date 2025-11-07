@@ -1,4 +1,4 @@
-package com.favour.merrytext.model;
+package com.favour.merrytext.payment;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
