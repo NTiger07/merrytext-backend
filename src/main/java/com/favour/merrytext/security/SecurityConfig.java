@@ -49,10 +49,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("merrytext/api/v1/auth/**").permitAll()
-                        .requestMatchers("merrytext/api/v1/user/**").permitAll()
-                        .requestMatchers("merrytext/api/v1/payment/**").permitAll()
-                        .requestMatchers("merrytext/api/v1/message/**").permitAll()
+                        // Ensure leading slashes are present so the matchers correctly match incoming
+                        // requests
+                        .requestMatchers("/merrytext/api/v1/auth/**").permitAll()
+                        .requestMatchers("/merrytext/api/v1/user/**").permitAll()
+                        .requestMatchers("/merrytext/api/v1/payment/**").permitAll()
+                        .requestMatchers("/merrytext/api/v1/message/**").permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
