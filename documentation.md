@@ -82,21 +82,24 @@ Example fields:
 
 Example fields:
 
-```
+```json
 {
-  "ownerUsername": "owner_username",
-  "ownerEmail": "owner@example.com",
-  "amount": 1000,
-  "coins": 100,
-  "priceId": "price_..."    // optional depending on Stripe setup
+  "ownerUsername": "owner_username", // Required: cannot be null or empty
+  "ownerEmail": "owner@example.com", // Required: cannot be null or empty
+  "amount": 200, // Required: amount in cents, must be > 0 (e.g., 200 = $2.00)
+  "coins": 30, // Optional: calculated by backend if not provided
+  "priceId": "price_..." // Optional: Stripe price ID (not currently used)
 }
 ```
 
 - Response: ApiResponse wrapping a Map (contains checkout session info/URLs) used by frontend to redirect to Stripe Checkout.
+  - Success response includes: `sessionId`, `url` (Stripe checkout URL), `coinsPurchased` (number of coins that will be awarded)
 
 Notes:
 
-- Backend validates presence of `ownerUsername` and `ownerEmail` and may throw `400` with an error message.
+- **IMPORTANT**: The `amount` field is REQUIRED and must be a positive integer representing cents (e.g., 200 = $2.00, 500 = $5.00).
+- Backend validates presence of `ownerUsername`, `ownerEmail`, and `amount` and returns `400` with a descriptive error message if any are missing or invalid.
+- The backend calculates coins as: `(amount * 30) / 200` — so $2.00 (200 cents) = 30 coins.
 
 2. Stripe webhook (server-to-server)
 

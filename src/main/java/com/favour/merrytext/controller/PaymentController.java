@@ -34,10 +34,18 @@ public class PaymentController {
             @RequestBody PaymentRequest paymentRequest) {
 
         try {
-            // Validate that username and email are provided in request
-            if (paymentRequest.getOwnerUsername() == null || paymentRequest.getOwnerEmail() == null) {
+            // Validate required fields
+            if (paymentRequest.getOwnerUsername() == null || paymentRequest.getOwnerUsername().isEmpty()) {
                 return ResponseEntity.badRequest()
-                        .body(ApiResponse.error("Username and email are required"));
+                        .body(ApiResponse.error("Username is required"));
+            }
+            if (paymentRequest.getOwnerEmail() == null || paymentRequest.getOwnerEmail().isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Email is required"));
+            }
+            if (paymentRequest.getAmount() == null || paymentRequest.getAmount() <= 0) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.error("Amount is required and must be greater than 0"));
             }
 
             Map<String, Object> result = paymentService.createCheckoutSession(
