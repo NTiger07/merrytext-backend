@@ -163,10 +163,44 @@ Create a new personalized greeting message.
     "uniqueUrl": "abc123xyz",
     "shareableUrl": "https://merrytext.com/view/abc123xyz",
     "shareableText": "Check out this message from johndoe: https://merrytext.com/view/abc123xyz",
-    "remainingCoins": 99
+    "remainingCoins": 99,
+    "user": {
+      "username": "johndoe",
+      "name": "John Doe",
+      "level": 2,
+      "totalXp": 250,
+      "merryCoins": 99,
+      "stats": {
+        "totalMessagesSent": 6,
+        "totalMessagesViewed": 50,
+        "totalCoinsEarned": 100,
+        "totalCoinsSpent": 6,
+        "uniqueRecipients": 4,
+        "currentStreak": 3,
+        "longestStreak": 7
+      },
+      "achievements": [
+        {
+          "achievementId": {
+            "_id": "507f1f77bcf86cd799439020",
+            "name": "First Message",
+            "description": "Send your first festive message",
+            "icon": "✨",
+            "total": 1,
+            "category": "messaging",
+            "xpReward": 50
+          },
+          "progress": 1,
+          "unlocked": true,
+          "unlockedAt": "2025-11-08T09:00:00.000Z"
+        }
+      ]
+    }
   }
 }
 ```
+
+**Note:** The response now includes the full user object with stats and populated achievements, providing complete context about the user's current state after the action.
 
 **Error Responses:**
 
@@ -379,10 +413,44 @@ The backend uses the formula: `coins = (amount * 30) / 200`
     "sessionId": "cs_test_a1b2c3d4e5f6",
     "url": "https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5f6",
     "amount": 200,
-    "coins": 30
+    "coins": 30,
+    "user": {
+      "username": "johndoe",
+      "name": "John Doe",
+      "level": 2,
+      "totalXp": 250,
+      "merryCoins": 99,
+      "stats": {
+        "totalMessagesSent": 6,
+        "totalMessagesViewed": 50,
+        "totalCoinsEarned": 100,
+        "totalCoinsSpent": 6,
+        "uniqueRecipients": 4,
+        "currentStreak": 3,
+        "longestStreak": 7
+      },
+      "achievements": [
+        {
+          "achievementId": {
+            "_id": "507f1f77bcf86cd799439020",
+            "name": "First Message",
+            "description": "Send your first festive message",
+            "icon": "✨",
+            "total": 1,
+            "category": "messaging",
+            "xpReward": 50
+          },
+          "progress": 1,
+          "unlocked": true,
+          "unlockedAt": "2025-11-08T09:00:00.000Z"
+        }
+      ]
+    }
   }
 }
 ```
+
+**Note:** The response includes the full user object with current stats and populated achievements.
 
 **Usage:**
 
@@ -674,6 +742,31 @@ Retrieve a list of all registered users.
       "totalXp": 500,
       "level": 3,
       "profilePicture": null,
+      "stats": {
+        "totalMessagesSent": 5,
+        "totalMessagesViewed": 20,
+        "totalCoinsEarned": 100,
+        "totalCoinsSpent": 5,
+        "uniqueRecipients": 3,
+        "currentStreak": 2,
+        "longestStreak": 5
+      },
+      "achievements": [
+        {
+          "achievementId": {
+            "_id": "507f1f77bcf86cd799439020",
+            "name": "First Message",
+            "description": "Send your first festive message",
+            "icon": "✨",
+            "total": 1,
+            "category": "messaging",
+            "xpReward": 50
+          },
+          "progress": 1,
+          "unlocked": true,
+          "unlockedAt": "2025-11-01T10:30:00.000Z"
+        }
+      ],
       "createdAt": "2025-11-01T10:00:00.000Z",
       "updatedAt": "2025-11-08T10:00:00.000Z"
     }
@@ -682,7 +775,7 @@ Retrieve a list of all registered users.
 }
 ```
 
-**Note:** Password field is excluded from the response for security.
+**Note:** Password field is excluded. Stats and achievements are included with full achievement details populated.
 
 ---
 
@@ -716,11 +809,52 @@ Retrieve detailed information about a specific user.
     "totalXp": 2500,
     "level": 8,
     "profilePicture": "https://example.com/avatar.jpg",
+    "stats": {
+      "totalMessagesSent": 42,
+      "totalMessagesViewed": 687,
+      "totalCoinsEarned": 200,
+      "totalCoinsSpent": 50,
+      "uniqueRecipients": 15,
+      "currentStreak": 7,
+      "longestStreak": 14
+    },
+    "achievements": [
+      {
+        "achievementId": {
+          "_id": "507f1f77bcf86cd799439020",
+          "name": "First Message",
+          "description": "Send your first festive message",
+          "icon": "✨",
+          "total": 1,
+          "category": "messaging",
+          "xpReward": 50
+        },
+        "progress": 1,
+        "unlocked": true,
+        "unlockedAt": "2025-10-01T10:30:00.000Z"
+      },
+      {
+        "achievementId": {
+          "_id": "507f1f77bcf86cd799439021",
+          "name": "Social Butterfly",
+          "description": "Send messages to 10 different people",
+          "icon": "🎯",
+          "total": 10,
+          "category": "social",
+          "xpReward": 100
+        },
+        "progress": 10,
+        "unlocked": true,
+        "unlockedAt": "2025-10-15T14:20:00.000Z"
+      }
+    ],
     "createdAt": "2025-10-01T10:00:00.000Z",
     "updatedAt": "2025-11-08T10:00:00.000Z"
   }
 }
 ```
+
+**Note:** Includes embedded stats and achievements with full achievement details populated.
 
 **Error Responses:**
 
@@ -773,6 +907,44 @@ Create a new user account.
     "merryCoins": 100,
     "totalXp": 0,
     "level": 1,
+    "stats": {
+      "totalMessagesSent": 0,
+      "totalMessagesViewed": 0,
+      "totalCoinsEarned": 0,
+      "totalCoinsSpent": 0,
+      "uniqueRecipients": 0,
+      "currentStreak": 0,
+      "longestStreak": 0
+    },
+    "achievements": [
+      {
+        "achievementId": {
+          "_id": "507f1f77bcf86cd799439020",
+          "name": "First Message",
+          "description": "Send your first festive message",
+          "icon": "✨",
+          "total": 1,
+          "category": "messaging",
+          "xpReward": 50
+        },
+        "progress": 0,
+        "unlocked": false
+      },
+      {
+        "achievementId": {
+          "_id": "507f1f77bcf86cd799439021",
+          "name": "Social Butterfly",
+          "description": "Send messages to 10 different people",
+          "icon": "🎯",
+          "total": 10,
+          "category": "social",
+          "xpReward": 100
+        },
+        "progress": 0,
+        "unlocked": false
+      }
+      // ... all achievements initialized
+    ],
     "createdAt": "2025-11-08T10:00:00.000Z"
   }
 }
@@ -783,6 +955,8 @@ Create a new user account.
 - `merryCoins`: 100 (starting bonus)
 - `totalXp`: 0
 - `level`: 1
+- `stats`: All counters initialized to 0
+- `achievements`: All achievements automatically linked with 0 progress
 
 **Error Responses:**
 

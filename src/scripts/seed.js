@@ -2,7 +2,6 @@ require("dotenv").config();
 const mongoose = require("mongoose");
 const User = require("../models/User");
 const Achievement = require("../models/Achievement");
-const UserStats = require("../models/UserStats");
 
 const seedDatabase = async () => {
   try {
@@ -15,7 +14,6 @@ const seedDatabase = async () => {
     // Clear existing data (optional - comment out to preserve data)
     // await User.deleteMany({});
     // await Achievement.deleteMany({});
-    // await UserStats.deleteMany({});
     // console.log('🗑️  Cleared existing data');
 
     // Seed sample users
@@ -29,6 +27,15 @@ const seedDatabase = async () => {
         totalXp: 250,
         level: 2,
         emailVerified: true,
+        stats: {
+          totalMessagesSent: 5,
+          totalMessagesViewed: 10,
+          totalCoinsEarned: 100,
+          totalCoinsSpent: 5,
+          uniqueRecipients: 3,
+          currentStreak: 2,
+          longestStreak: 5,
+        },
       },
       {
         email: "jane@example.com",
@@ -39,6 +46,15 @@ const seedDatabase = async () => {
         totalXp: 50,
         level: 1,
         emailVerified: true,
+        stats: {
+          totalMessagesSent: 1,
+          totalMessagesViewed: 2,
+          totalCoinsEarned: 50,
+          totalCoinsSpent: 1,
+          uniqueRecipients: 1,
+          currentStreak: 1,
+          longestStreak: 1,
+        },
       },
     ];
 
@@ -47,19 +63,6 @@ const seedDatabase = async () => {
       if (!existingUser) {
         const user = await User.create(userData);
         console.log(`✅ Created user: ${user.username}`);
-
-        // Create user stats
-        await UserStats.create({
-          userId: user._id,
-          totalMessagesSent: 5,
-          totalMessagesViewed: 10,
-          totalCoinsEarned: 100,
-          totalCoinsSpent: 5,
-          uniqueRecipients: 3,
-          currentStreak: 2,
-          longestStreak: 5,
-        });
-        console.log(`✅ Created stats for: ${user.username}`);
       } else {
         console.log(`⏭️  User ${userData.username} already exists`);
       }

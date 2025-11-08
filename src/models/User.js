@@ -1,6 +1,80 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+// Subdocument schema for user stats
+const userStatsSchema = new mongoose.Schema(
+  {
+    totalMessagesSent: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalMessagesViewed: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalCoinsEarned: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    totalCoinsSpent: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    uniqueRecipients: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    messagesViewedToday: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    lastMessageDate: {
+      type: Date,
+    },
+    currentStreak: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    longestStreak: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+  },
+  { _id: false }
+);
+
+// Subdocument schema for user achievements
+const userAchievementSchema = new mongoose.Schema(
+  {
+    achievementId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Achievement",
+      required: true,
+    },
+    progress: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    unlocked: {
+      type: Boolean,
+      default: false,
+    },
+    unlockedAt: {
+      type: Date,
+    },
+  },
+  { _id: false }
+);
+
 const userSchema = new mongoose.Schema(
   {
     email: {
@@ -54,6 +128,16 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 1,
       min: 1,
+    },
+    // Embedded user stats
+    stats: {
+      type: userStatsSchema,
+      default: () => ({}),
+    },
+    // Embedded user achievements
+    achievements: {
+      type: [userAchievementSchema],
+      default: [],
     },
   },
   {

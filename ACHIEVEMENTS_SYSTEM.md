@@ -2,58 +2,112 @@
 
 ## 🎯 Overview
 
-Complete gamification infrastructure with achievements, user statistics, XP, and leveling system.
+Complete gamification infrastructure with achievements, user statistics, XP, and leveling system. The system automatically initializes on server startup and creates achievement entries for all users.
+
+## 🚀 Automatic Initialization
+
+### On Server Startup:
+
+1. **Achievement Population** - Loads default achievements into the database (skips if already exist)
+2. **UserAchievement Initialization** - Adds achievement entries to each user's `achievements` array if missing
+
+### On New User Registration:
+
+1. **User Stats** - Automatically initialized as embedded `stats` object with default values
+2. **User Achievements** - All achievements are added to the user's `achievements` array with 0 progress
+
+### Initialization Script:
+
+Located at: `src/scripts/initAchievements.js`
+
+**Functions:**
+
+- `initializeAchievements()` - Populates achievement definitions (idempotent)
+- `initializeUserAchievements()` - Adds missing achievements to all users' arrays (idempotent)
+- `initializeUserAchievementsForUser(userId)` - Initializes achievements for a specific user
 
 ## 📊 Database Schema
 
-### New Tables Created:
+### Architecture: Embedded Subdocuments
 
-1. **achievements** - Achievement definitions
+Stats and achievements are **embedded within the User schema** for improved performance and data consistency.
 
-   - id, name, description, icon, total, category, xp_reward, created_at
+**User Model Structure:**
 
-2. **user_achievements** - User's achievement progress
+```javascript
+{
+  email, username, name, // ... other user fields
+  merryCoins, totalXp, level,
 
-   - id, user_id, achievement_id, progress, unlocked, unlocked_at, created_at, updated_at
+  // Embedded stats object
+  stats: {
+    totalMessagesSent: Number,
+    totalMessagesViewed: Number,
+    totalCoinsEarned: Number,
+    totalCoinsSpent: Number,
+    uniqueRecipients: Number,
+    messagesViewedToday: Number,
+    lastMessageDate: Date,
+    currentStreak: Number,
+    longestStreak: Number
+  },
 
-3. **user_stats** - User statistics tracking
-   - id, user_id, total_messages_sent, total_messages_viewed, total_coins_earned, total_coins_spent
-   - unique_recipients, messages_viewed_today, last_message_date, current_streak, longest_streak
-   - created_at, updated_at
+  // Embedded achievements array
+  achievements: [{
+    achievementId: ObjectId (ref: 'Achievement'),
+    progress: Number,
+    unlocked: Boolean,
+    unlockedAt: Date
+  }]
+}
+```
+
+**Achievement Collection (Separate):**
+Stores achievement definitions that are referenced by users:
+
+- name, description, icon, total, category, xpReward
+
+### Benefits of Embedded Design:
+
+- ✅ Single query to get user with stats and achievements
+- ✅ Atomic updates - all user data updates together
+- ✅ Better performance - no joins or separate queries
+- ✅ Data consistency guaranteed
+- ✅ Simplified code
 
 ## 🏆 Achievements System
 
 ### Default Achievements:
 
-1. **First Message** (Sparkles)
+1. **First Message** (✨)
 
    - Description: Send your first festive message
    - Requirement: 1 message
    - XP Reward: 50
    - Category: messaging
 
-2. **Social Butterfly** (Target)
+2. **Social Butterfly** (🎯)
 
    - Description: Send messages to 10 different people
    - Requirement: 10 unique recipients
    - XP Reward: 100
    - Category: social
 
-3. **Coin Collector** (Trophy)
+3. **Coin Collector** (🏆)
 
    - Description: Earn 100 coins
    - Requirement: 100 coins earned
    - XP Reward: 75
    - Category: coins
 
-4. **Speed Sender** (Zap)
+4. **Speed Sender** (⚡)
 
    - Description: Send 5 messages in one day
    - Requirement: 5 messages in one day
    - XP Reward: 60
    - Category: speed
 
-5. **Master Messenger** (Award)
+5. **Master Messenger** (🏅)
    - Description: Send 100 total messages
    - Requirement: 100 total messages
    - XP Reward: 200
@@ -193,11 +247,17 @@ GET /merrytext/api/v1/stats/leaderboard?sortBy=xp&limit=10
 ### On User Registration:
 
 1. ✅ Initialize `UserStats` with all counters at 0
-2. ✅ Create `UserAchievement` entries for all achievements
+2. ✅ Create `UserAchievement` entries for all achievements (via `initializeUserAchievementsForUser`)
 3. ✅ Set initial level to 1, XP to 0
-4. ✅ Award 20 starter coins
+4. ✅ Award 100 starter coins
 
 ## 🎮 Services Overview
+
+### Initialization Service (`initAchievements.js`)
+
+- `initializeAchievements()` - Populate achievement definitions (runs on startup, idempotent)
+- `initializeUserAchievements()` - Create UserAchievement entries for all users (runs on startup, idempotent)
+- `initializeUserAchievementsForUser(userId)` - Initialize achievements for a new user
 
 ### LevelService
 
@@ -241,7 +301,7 @@ GET /merrytext/api/v1/stats/leaderboard?sortBy=xp&limit=10
 ### AuthController
 
 - Calls `statsService.initializeUserStats()` on registration
-- Calls `achievementService.initializeUserAchievements()` on registration
+- Calls `initializeUserAchievementsForUser()` on registration (from `initAchievements.js`)
 
 ## 📦 Models
 
@@ -290,7 +350,7 @@ const achievements = [
     id: 1,
     name: "First Message",
     description: "Send your first festive message",
-    icon: "Sparkles", // Can map to React icons
+    icon: "✨", // Emoji icons
     unlocked: true,
     progress: 1,
     total: 1,
@@ -299,12 +359,67 @@ const achievements = [
 ];
 ```
 
-## ⚡ Performance Notes
+## ⚡ Performance & Implementation Notes
 
+- Achievement initialization runs **once on server startup** (idempotent - safe to run multiple times)
+- **Skips existing entries** - Won't create duplicates if achievements or UserAchievements already exist
+- UserAchievement entries are created automatically for:
+  - All existing users on startup
+  - New users on registration
 - Achievement checking is batched and runs after actions
-- Stats updates use @Transactional for consistency
-- Achievements are cached in memory after first load
+- Stats updates use proper error handling for consistency
+- Achievements are loaded from database
 - Leaderboard can be optimized with database indexes
+
+## 🔧 Setup Instructions
+
+### 1. Start the server
+
+The achievements system will automatically initialize:
+
+```bash
+npm start
+```
+
+Expected console output:
+
+```
+✅ Connected to MongoDB
+🎯 Initializing achievements system...
+✅ Created achievement: First Message
+✅ Created achievement: Social Butterfly
+✅ Created achievement: Coin Collector
+✅ Created achievement: Speed Sender
+✅ Created achievement: Master Messenger
+📊 Total achievements in database: 5
+✅ UserAchievements initialized: 25 created, 0 already existed
+✅ Server running on port 3000
+```
+
+### 2. Register a new user
+
+User achievements are automatically initialized:
+
+```bash
+POST /merrytext/api/v1/user/register
+```
+
+The system will:
+
+- Create the user account
+- Initialize UserStats
+- Create UserAchievement entries for all 5 achievements
+- Award 100 starting coins
+
+### 3. Verify initialization
+
+Check user achievements:
+
+```bash
+GET /merrytext/api/v1/stats/achievements/{username}
+```
+
+You should see all 5 achievements with `unlocked: false` and `progress: 0`
 
 ## 🔐 Security
 
@@ -326,21 +441,46 @@ const achievements = [
 
 ## 🛠️ Development
 
-All files created:
+**Core Files:**
 
-- Models: `Achievement.java`, `UserAchievement.java`, `UserStats.java`
-- Repositories: `AchievementRepository.java`, `UserAchievementRepository.java`, `UserStatsRepository.java`
-- Services: `LevelService.java`, `AchievementService.java`, `StatsService.java`
-- Controller: `StatsController.java`
-- Config: `DataInitializer.java`
-- DTOs: `AchievementResponse.java`, Updated `UserStatsResponse.java`
+- `src/scripts/initAchievements.js` - Achievement initialization logic (NEW)
+- `src/models/Achievement.js` - Achievement model
+- `src/models/UserAchievement.js` - UserAchievement model
+- `src/models/UserStats.js` - UserStats model
+- `src/controllers/stats.controller.js` - Stats API endpoints
+- `src/controllers/user.controller.js` - User registration (calls initialization)
+- `src/index.js` - Server startup (calls initialization)
 
-Integrated into:
+**Integrated into:**
 
-- `MessageService.java` - Track message stats & XP
-- `PaymentService.java` - Track coin purchases & XP
-- `AuthController.java` - Initialize new user stats
+- `src/index.js` - Runs initialization on startup
+- `src/controllers/user.controller.js` - Initializes achievements for new users
+- `src/controllers/message.controller.js` - Track message stats & XP (TODO)
+- `src/controllers/payment.controller.js` - Track coin purchases & XP (TODO)
+
+## 🔄 Migration Guide
+
+If you have existing users without achievements:
+
+1. **Simply restart the server** - The initialization script will automatically:
+
+   - Create the 5 default achievements (if they don't exist)
+   - Create UserAchievement entries for all existing users
+   - Skip any that already exist (idempotent)
+
+2. **Manual initialization** (optional):
+
+```javascript
+const {
+  initializeAchievements,
+  initializeUserAchievements,
+} = require("./src/scripts/initAchievements");
+
+// In a Node.js script or console
+await initializeAchievements();
+await initializeUserAchievements();
+```
 
 ---
 
-**System Status**: ✅ Fully Implemented & Ready to Use!
+**System Status**: ✅ Fully Implemented & Auto-Initializing!

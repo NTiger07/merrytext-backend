@@ -14,6 +14,12 @@ const paymentRoutes = require("./routes/payment.routes");
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
 
+// Import initialization scripts
+const {
+  initializeAchievements,
+  initializeUserAchievements,
+} = require("./scripts/initAchievements");
+
 const app = express();
 
 // Middleware
@@ -60,7 +66,12 @@ const PORT = process.env.PORT || 3000;
 
 // Connect to MongoDB and start server
 connectDB()
-  .then(() => {
+  .then(async () => {
+    // Initialize achievements system on startup
+    console.log("🎯 Initializing achievements system...");
+    await initializeAchievements();
+    await initializeUserAchievements();
+
     app.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
       console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);

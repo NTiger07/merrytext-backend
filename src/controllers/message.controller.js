@@ -1,6 +1,5 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
-const UserStats = require("../models/UserStats");
 const ApiResponse = require("../utils/ApiResponse");
 const {
   generateMessageUrl,
@@ -22,7 +21,9 @@ exports.createMessage = async (req, res) => {
   } = req.body;
 
   // Find the user
-  const user = await User.findOne({ username: ownerUsername });
+  const user = await User.findOne({ username: ownerUsername }).populate(
+    "achievements.achievementId"
+  );
 
   if (!user) {
     return res.status(404).json(ApiResponse.error("User not found"));
@@ -52,18 +53,16 @@ exports.createMessage = async (req, res) => {
 
   // Deduct coins from user
   user.merryCoins -= coinsRequired;
-  await user.save();
 
   // Update user stats
-  await UserStats.findOneAndUpdate(
-    { userId: user._id },
-    {
-      $inc: {
-        totalMessagesSent: 1,
-        totalCoinsSpent: coinsRequired,
-      },
-    },
-    { upsert: true }
+  user.stats.totalMessagesSent += 1;
+  user.stats.totalCoinsSpent += coinsRequired;
+
+  await user.save();
+
+  // Fetch updated user with populated achievements
+  const updatedUser = await User.findById(user._id).populate(
+    "achievements.achievementId"
   );
 
   // Prepare response
@@ -72,7 +71,16 @@ exports.createMessage = async (req, res) => {
     uniqueUrl: message.messageUrl,
     shareableUrl: getFullViewUrl(message.messageUrl),
     shareableText: generateShareableText(user, message.messageUrl),
-    remainingCoins: user.merryCoins,
+    remainingCoins: updatedUser.merryCoins,
+    user: {
+      username: updatedUser.username,
+      name: updatedUser.name,
+      level: updatedUser.level,
+      totalXp: updatedUser.totalXp,
+      merryCoins: updatedUser.merryCoins,
+      stats: updatedUser.stats,
+      achievements: updatedUser.achievements,
+    },
   };
 
   res
@@ -99,11 +107,8 @@ exports.viewMessage = async (req, res) => {
   // Update stats
   const user = await User.findOne({ username: message.ownerUsername });
   if (user) {
-    await UserStats.findOneAndUpdate(
-      { userId: user._id },
-      { $inc: { totalMessagesViewed: 1 } },
-      { upsert: true }
-    );
+    user.stats.totalMessagesViewed += 1;
+    await user.save();
   }
 
   // Prepare response

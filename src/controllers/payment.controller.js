@@ -1,7 +1,6 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
-const UserStats = require("../models/UserStats");
 const ApiResponse = require("../utils/ApiResponse");
 
 /**
@@ -24,7 +23,9 @@ exports.createCheckoutSession = async (req, res) => {
   }
 
   // Find user
-  const user = await User.findOne({ username: ownerUsername });
+  const user = await User.findOne({ username: ownerUsername }).populate(
+    "achievements.achievementId"
+  );
 
   if (!user) {
     return res.status(404).json(ApiResponse.error("User not found"));
@@ -73,6 +74,15 @@ exports.createCheckoutSession = async (req, res) => {
       url: session.url,
       amount,
       coins,
+      user: {
+        username: user.username,
+        name: user.name,
+        level: user.level,
+        totalXp: user.totalXp,
+        merryCoins: user.merryCoins,
+        stats: user.stats,
+        achievements: user.achievements,
+      },
     };
 
     res.json(ApiResponse.success(result, "Checkout session created"));
@@ -140,7 +150,9 @@ async function completePayment(session) {
   }
 
   // Find user and add coins
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).populate(
+    "achievements.achievementId"
+  );
 
   if (!user) {
     throw new Error("User not found");
@@ -148,20 +160,19 @@ async function completePayment(session) {
 
   const coinsToAdd = parseInt(coins);
   user.merryCoins += coinsToAdd;
+
+  // Update user stats
+  user.stats.totalCoinsEarned += coinsToAdd;
+
   await user.save();
 
   // Update transaction status
   transaction.status = "completed";
   await transaction.save();
 
-  // Update user stats
-  await UserStats.findOneAndUpdate(
-    { userId: user._id },
-    { $inc: { totalCoinsEarned: coinsToAdd } },
-    { upsert: true }
+  console.log(
+    `✅ Payment completed: ${coinsToAdd} coins added to ${username}. Total: ${user.merryCoins}, Stats: ${user.stats.totalCoinsEarned} earned`
   );
-
-  console.log(`✅ Payment completed: ${coinsToAdd} coins added to ${username}`);
 }
 
 module.exports = { ...exports, completePayment };

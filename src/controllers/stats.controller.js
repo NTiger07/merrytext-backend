@@ -1,7 +1,5 @@
 const User = require("../models/User");
-const UserStats = require("../models/UserStats");
 const Achievement = require("../models/Achievement");
-const UserAchievement = require("../models/UserAchievement");
 const ApiResponse = require("../utils/ApiResponse");
 const {
   xpToNextLevel,
@@ -20,23 +18,7 @@ exports.getUserStats = async (req, res) => {
     return res.status(404).json(ApiResponse.error("User not found"));
   }
 
-  // Get or create stats
-  let stats = await UserStats.findOne({ userId: user._id });
-
-  if (!stats) {
-    stats = await UserStats.create({
-      userId: user._id,
-      totalMessagesSent: 0,
-      totalMessagesViewed: 0,
-      totalCoinsEarned: 0,
-      totalCoinsSpent: 0,
-      uniqueRecipients: 0,
-      currentStreak: 0,
-      longestStreak: 0,
-    });
-  }
-
-  // Build response
+  // Build response from embedded stats
   const response = {
     userId: user._id,
     name: user.name,
@@ -45,13 +27,13 @@ exports.getUserStats = async (req, res) => {
     level: user.level,
     xpToNextLevel: xpToNextLevel(user.totalXp),
     progressToNextLevel: progressToNextLevel(user.totalXp),
-    totalMessagesSent: stats.totalMessagesSent,
-    totalMessagesViewed: stats.totalMessagesViewed,
-    totalCoinsEarned: stats.totalCoinsEarned,
-    totalCoinsSpent: stats.totalCoinsSpent,
-    uniqueRecipients: stats.uniqueRecipients,
-    currentStreak: stats.currentStreak,
-    longestStreak: stats.longestStreak,
+    totalMessagesSent: user.stats.totalMessagesSent,
+    totalMessagesViewed: user.stats.totalMessagesViewed,
+    totalCoinsEarned: user.stats.totalCoinsEarned,
+    totalCoinsSpent: user.stats.totalCoinsSpent,
+    uniqueRecipients: user.stats.uniqueRecipients,
+    currentStreak: user.stats.currentStreak,
+    longestStreak: user.stats.longestStreak,
   };
 
   res.json(ApiResponse.success(response));
@@ -63,19 +45,16 @@ exports.getUserStats = async (req, res) => {
 exports.getUserAchievements = async (req, res) => {
   const { username } = req.params;
 
-  const user = await User.findOne({ username });
+  const user = await User.findOne({ username }).populate(
+    "achievements.achievementId"
+  );
 
   if (!user) {
     return res.status(404).json(ApiResponse.error("User not found"));
   }
 
-  // Get user achievements with achievement details
-  const userAchievements = await UserAchievement.find({
-    userId: user._id,
-  }).populate("achievementId");
-
-  // Map to response format
-  const achievements = userAchievements.map((ua) => {
+  // Map embedded achievements to response format
+  const achievements = user.achievements.map((ua) => {
     const achievement = ua.achievementId;
     return {
       id: achievement._id,
