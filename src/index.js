@@ -64,22 +64,45 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 
-// Connect to MongoDB and start server
-connectDB()
-  .then(async () => {
-    // Initialize achievements system on startup
+// Initialize database connection and achievements
+let isInitialized = false;
+
+const initialize = async () => {
+  if (!isInitialized) {
+    await connectDB();
     console.log("🎯 Initializing achievements system...");
     await initializeAchievements();
     await initializeUserAchievements();
+    isInitialized = true;
+  }
+};
 
-    app.listen(PORT, () => {
-      console.log(`✅ Server running on port ${PORT}`);
-      console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
-    });
-  })
-  .catch((err) => {
-    console.error("❌ Failed to connect to MongoDB:", err.message);
-    process.exit(1);
+// For Vercel serverless functions
+if (process.env.VERCEL) {
+  // Initialize on first request
+  app.use(async (req, res, next) => {
+    try {
+      await initialize();
+      next();
+    } catch (err) {
+      console.error("❌ Failed to initialize:", err.message);
+      res.status(500).json({ error: "Server initialization failed" });
+    }
   });
+} else {
+  // For local development
+  connectDB()
+    .then(async () => {
+      await initialize();
+      app.listen(PORT, () => {
+        console.log(`✅ Server running on port ${PORT}`);
+        console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+      });
+    })
+    .catch((err) => {
+      console.error("❌ Failed to connect to MongoDB:", err.message);
+      process.exit(1);
+    });
+}
 
 module.exports = app;

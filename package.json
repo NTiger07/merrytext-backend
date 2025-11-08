@@ -14,7 +14,7 @@
     "express",
     "mongodb"
   ],
-  "author": "MerryText Team",
+  "author": "MerryText",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
