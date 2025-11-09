@@ -66,31 +66,69 @@ const PORT = process.env.PORT || 3000;
 
 // Initialize database connection and achievements
 let isInitialized = false;
+let initPromise = null;
 
 const initialize = async () => {
-  if (!isInitialized) {
-    await connectDB();
-    console.log("🎯 Initializing achievements system...");
-    await initializeAchievements();
-    await initializeUserAchievements();
-    isInitialized = true;
+  // If initialization is already in progress, wait for it
+  if (initPromise) {
+    return initPromise;
   }
+
+  // If already initialized, return immediately
+  if (isInitialized) {
+    return Promise.resolve();
+  }
+
+  // Start initialization
+  initPromise = (async () => {
+    try {
+      console.log("🔌 Connecting to MongoDB...");
+      await connectDB();
+
+      console.log("🎯 Initializing achievements system...");
+      await initializeAchievements();
+      await initializeUserAchievements();
+
+      isInitialized = true;
+      console.log("✅ Initialization complete");
+    } catch (error) {
+      console.error("❌ Initialization failed:", error.message);
+      initPromise = null; // Reset so it can retry
+      throw error;
+    }
+  })();
+
+  return initPromise;
 };
 
 // For Vercel serverless functions
 if (process.env.VERCEL) {
-  // Initialize on first request
+  console.log("🚀 Running in Vercel serverless mode");
+
+  // Initialize on first request with timeout protection
   app.use(async (req, res, next) => {
     try {
+      // Set a timeout for initialization
+      const initTimeout = setTimeout(() => {
+        console.error("⚠️ Initialization timeout - proceeding anyway");
+      }, 8000);
+
       await initialize();
+      clearTimeout(initTimeout);
       next();
     } catch (err) {
       console.error("❌ Failed to initialize:", err.message);
-      res.status(500).json({ error: "Server initialization failed" });
+      res.status(503).json({
+        success: false,
+        error: "Service temporarily unavailable. Please try again.",
+        details:
+          process.env.NODE_ENV === "development" ? err.message : undefined,
+      });
     }
   });
 } else {
   // For local development
+  console.log("🏠 Running in local development mode");
   connectDB()
     .then(async () => {
       await initialize();
