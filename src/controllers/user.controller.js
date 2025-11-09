@@ -112,20 +112,22 @@ exports.registerUser = async (req, res) => {
 };
 
 /**
- * Login user with email and password
+ * Login user with email/username and password
  */
 exports.loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  const { username_email, password } = req.body;
 
   // Validate input
-  if (!email || !password) {
+  if (!username_email || !password) {
     return res
       .status(400)
-      .json(ApiResponse.error("Email and password are required"));
+      .json(ApiResponse.error("Username/email and password are required"));
   }
 
-  // Find user and include password field
-  const user = await User.findOne({ email }).select("+password");
+  // Find user by email or username and include password field
+  const user = await User.findOne({
+    $or: [{ email: username_email }, { username: username_email }],
+  }).select("+password");
 
   if (!user) {
     return res.status(401).json(ApiResponse.error("Invalid credentials"));
