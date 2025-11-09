@@ -32,6 +32,9 @@ const transactionSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed"],
       default: "pending",
     },
+    completedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

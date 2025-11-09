@@ -97,6 +97,83 @@ exports.createCheckoutSession = async (req, res) => {
 };
 
 /**
+ * Verify payment session
+ */
+exports.verifyPaymentSession = async (req, res) => {
+  const { sessionId } = req.params;
+  const { username } = req.query;
+
+  if (!sessionId) {
+    return res.status(400).json(ApiResponse.error("Session ID is required"));
+  }
+
+  try {
+    // Retrieve session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // Find transaction in database
+    const transaction = await Transaction.findOne({
+      stripePaymentIntentId: sessionId,
+    });
+
+    if (!transaction) {
+      return res.status(404).json(ApiResponse.error("Transaction not found"));
+    }
+
+    // Verify username if provided
+    if (username && transaction.ownerUsername !== username) {
+      return res
+        .status(403)
+        .json(ApiResponse.error("Unauthorized to view this transaction"));
+    }
+
+    // If payment is complete but transaction is still pending, complete it now
+    if (session.payment_status === "paid" && transaction.status === "pending") {
+      await completePayment(session);
+    }
+
+    // Refresh transaction from database to get updated status
+    const updatedTransaction = await Transaction.findOne({
+      stripePaymentIntentId: sessionId,
+    });
+
+    // Get updated user data AFTER completing payment
+    const user = await User.findOne({
+      username: updatedTransaction.ownerUsername,
+    })
+      .select("-password")
+      .populate("achievements.achievementId");
+
+    const result = {
+      sessionId: session.id,
+      paymentStatus: session.payment_status,
+      transactionStatus: updatedTransaction.status,
+      amount: updatedTransaction.amount,
+      coinsPurchased: updatedTransaction.coinsPurchased,
+      completedAt: updatedTransaction.completedAt,
+      user: user
+        ? {
+            username: user.username,
+            name: user.name,
+            merryCoins: user.merryCoins,
+            level: user.level,
+            totalXp: user.totalXp,
+            stats: user.stats,
+            achievements: user.achievements,
+          }
+        : null,
+    };
+
+    res.json(ApiResponse.success(result, "Payment session verified"));
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    res
+      .status(500)
+      .json(ApiResponse.error("Failed to verify payment: " + error.message));
+  }
+};
+
+/**
  * Handle Stripe webhook
  */
 exports.handleWebhook = async (req, res) => {
@@ -140,39 +217,36 @@ async function completePayment(session) {
   });
 
   if (!transaction) {
+    console.error(`❌ Transaction not found for session: ${sessionId}`);
     throw new Error("Transaction not found");
   }
 
   // Check if already completed
   if (transaction.status === "completed") {
-    console.log("Transaction already completed");
     return;
   }
 
   // Find user and add coins
-  const user = await User.findOne({ username }).populate(
-    "achievements.achievementId"
-  );
+  const user = await User.findOne({ username });
 
   if (!user) {
+    console.error(`❌ User not found: ${username}`);
     throw new Error("User not found");
   }
 
   const coinsToAdd = parseInt(coins);
-  user.merryCoins += coinsToAdd;
 
-  // Update user stats
+  // Update coins and stats
+  user.merryCoins += coinsToAdd;
   user.stats.totalCoinsEarned += coinsToAdd;
 
-  await user.save();
+  // Save and wait for confirmation
+  const savedUser = await user.save();
 
   // Update transaction status
   transaction.status = "completed";
+  transaction.completedAt = new Date();
   await transaction.save();
-
-  console.log(
-    `✅ Payment completed: ${coinsToAdd} coins added to ${username}. Total: ${user.merryCoins}, Stats: ${user.stats.totalCoinsEarned} earned`
-  );
 }
 
 module.exports = { ...exports, completePayment };

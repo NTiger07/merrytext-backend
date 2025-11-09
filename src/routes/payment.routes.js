@@ -8,6 +8,12 @@ router.post(
   paymentController.createCheckoutSession
 );
 
+// Verify payment session
+router.get(
+  "/verify-session/:sessionId",
+  paymentController.verifyPaymentSession
+);
+
 // Stripe webhook - receives raw body
 router.post(
   "/webhook",
