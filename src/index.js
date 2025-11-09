@@ -105,22 +105,29 @@ const initialize = async () => {
 if (process.env.VERCEL) {
   console.log("🚀 Running in Vercel serverless mode");
 
-  // Initialize on first request with timeout protection
+  // Pre-initialize on module load (happens once per cold start)
+  const warmup = initialize().catch((err) => {
+    console.error("⚠️ Warmup initialization failed:", err.message);
+  });
+
+  // Ensure initialization before handling requests
   app.use(async (req, res, next) => {
     try {
-      // Set a timeout for initialization
-      const initTimeout = setTimeout(() => {
-        console.error("⚠️ Initialization timeout - proceeding anyway");
-      }, 8000);
+      // Wait for warmup to complete
+      await warmup;
 
-      await initialize();
-      clearTimeout(initTimeout);
+      // Double-check initialization
+      if (!isInitialized) {
+        console.log("🔄 Re-attempting initialization...");
+        await initialize();
+      }
+
       next();
     } catch (err) {
       console.error("❌ Failed to initialize:", err.message);
       res.status(503).json({
         success: false,
-        error: "Service temporarily unavailable. Please try again.",
+        error: "Service temporarily unavailable. Database connection failed.",
         details:
           process.env.NODE_ENV === "development" ? err.message : undefined,
       });

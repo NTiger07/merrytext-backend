@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
 
+// Disable buffering globally - we'll ensure connection before queries
+mongoose.set("bufferCommands", false);
+
 // Cache the connection for serverless environments
 let cachedConnection = null;
+let connectionPromise = null;
 
 const connectDB = async () => {
   // Return cached connection if it exists and is ready
@@ -10,15 +14,22 @@ const connectDB = async () => {
     return cachedConnection;
   }
 
+  // If connection is in progress, wait for it
+  if (connectionPromise) {
+    console.log("⏳ Waiting for existing connection attempt...");
+    return connectionPromise;
+  }
+
   try {
     const uri =
       process.env.MONGODB_URI || "mongodb://localhost:27017/merrytext";
 
+    console.log("🔌 Initiating MongoDB connection...");
+
     const options = {
-      bufferCommands: false, // Disable buffering for faster failure
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
-      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-      maxPoolSize: 10, // Maintain up to 10 socket connections
+      serverSelectionTimeoutMS: 10000, // Increased to 10 seconds
+      socketTimeoutMS: 45000,
+      maxPoolSize: 10,
     };
 
     // If already connected, return existing connection
@@ -30,22 +41,35 @@ const connectDB = async () => {
     // If connecting, wait for it
     if (mongoose.connection.readyState === 2) {
       console.log("⏳ MongoDB connection in progress...");
-      await new Promise((resolve) => {
-        mongoose.connection.once("connected", resolve);
+      connectionPromise = new Promise((resolve, reject) => {
+        mongoose.connection.once("connected", () => {
+          cachedConnection = mongoose.connection;
+          connectionPromise = null;
+          resolve(cachedConnection);
+        });
+        mongoose.connection.once("error", (err) => {
+          connectionPromise = null;
+          reject(err);
+        });
       });
-      cachedConnection = mongoose.connection;
-      return cachedConnection;
+      return connectionPromise;
     }
 
     // Create new connection
-    await mongoose.connect(uri, options);
+    connectionPromise = mongoose.connect(uri, options);
+    await connectionPromise;
+
     cachedConnection = mongoose.connection;
+    connectionPromise = null;
+
     console.log("✅ MongoDB connected successfully");
+    console.log(`📊 Database: ${mongoose.connection.name}`);
 
     return cachedConnection;
   } catch (error) {
     console.error("❌ MongoDB connection error:", error.message);
     cachedConnection = null;
+    connectionPromise = null;
     throw error;
   }
 };
