@@ -2,9 +2,13 @@ const User = require("../models/User");
 const Message = require("../models/Message");
 const Transaction = require("../models/Transaction");
 const ApiResponse = require("../utils/ApiResponse");
+const { generateToken } = require("../utils/jwt");
+const { OAuth2Client } = require("google-auth-library");
 const {
   initializeUserAchievementsForUser,
 } = require("../scripts/initAchievements");
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
  * Get all users
@@ -105,6 +109,174 @@ exports.registerUser = async (req, res) => {
   res
     .status(201)
     .json(ApiResponse.success(response, "User registered successfully"));
+};
+
+/**
+ * Login user with email and password
+ */
+exports.loginUser = async (req, res) => {
+  const { email, password } = req.body;
+
+  // Validate input
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Email and password are required"));
+  }
+
+  // Find user and include password field
+  const user = await User.findOne({ email }).select("+password");
+
+  if (!user) {
+    return res.status(401).json(ApiResponse.error("Invalid credentials"));
+  }
+
+  // Check if user registered with email/password
+  if (user.authProvider !== "email") {
+    return res
+      .status(400)
+      .json(
+        ApiResponse.error(
+          `Please login using ${user.authProvider} authentication`
+        )
+      );
+  }
+
+  // Verify password
+  const isPasswordValid = await user.comparePassword(password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json(ApiResponse.error("Invalid credentials"));
+  }
+
+  // Generate JWT token
+  const token = generateToken(user._id);
+
+  // Fetch user with populated achievements
+  const populatedUser = await User.findById(user._id)
+    .select("-password")
+    .populate("achievements.achievementId");
+
+  // Fetch user's messages and transactions
+  const messages = await Message.find({ ownerUsername: user.username }).sort({
+    createdAt: -1,
+  });
+  const transactions = await Transaction.find({
+    ownerUsername: user.username,
+  }).sort({
+    createdAt: -1,
+  });
+
+  // Construct response
+  const response = {
+    ...populatedUser.toObject(),
+    messages,
+    transactions,
+    token,
+  };
+
+  res.json(ApiResponse.success(response, "Login successful"));
+};
+
+/**
+ * Google OAuth login
+ */
+exports.googleAuth = async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    return res
+      .status(400)
+      .json(ApiResponse.error("Google ID token is required"));
+  }
+
+  try {
+    // Verify Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture, email_verified } = payload;
+
+    // Check if user exists
+    let user = await User.findOne({ email });
+
+    if (user) {
+      // User exists - update Google ID if not set
+      if (!user.googleId) {
+        user.googleId = googleId;
+        user.authProvider = "google";
+        user.emailVerified = email_verified;
+        if (picture && !user.profilePicture) {
+          user.profilePicture = picture;
+        }
+        await user.save();
+      }
+    } else {
+      // Create new user
+      // Generate username from email
+      const baseUsername = email.split("@")[0].toLowerCase();
+      let username = baseUsername;
+      let counter = 1;
+
+      // Ensure username is unique
+      while (await User.findOne({ username })) {
+        username = `${baseUsername}${counter}`;
+        counter++;
+      }
+
+      user = await User.create({
+        email,
+        username,
+        name,
+        authProvider: "google",
+        googleId,
+        emailVerified: email_verified,
+        profilePicture: picture,
+        merryCoins: 100, // Starting coins
+        totalXp: 0,
+        level: 1,
+      });
+
+      // Initialize achievements for new user
+      await initializeUserAchievementsForUser(user._id);
+    }
+
+    // Generate JWT token
+    const token = generateToken(user._id);
+
+    // Fetch user with populated achievements
+    const populatedUser = await User.findById(user._id)
+      .select("-password")
+      .populate("achievements.achievementId");
+
+    // Fetch user's messages and transactions
+    const messages = await Message.find({
+      ownerUsername: populatedUser.username,
+    }).sort({
+      createdAt: -1,
+    });
+    const transactions = await Transaction.find({
+      ownerUsername: populatedUser.username,
+    }).sort({
+      createdAt: -1,
+    });
+
+    // Construct response
+    const response = {
+      ...populatedUser.toObject(),
+      messages,
+      transactions,
+      token,
+    };
+
+    res.json(ApiResponse.success(response, "Google authentication successful"));
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return res.status(401).json(ApiResponse.error("Invalid Google token"));
+  }
 };
 
 /**

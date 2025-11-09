@@ -7,6 +7,8 @@ const authenticate = require("../middleware/authenticate");
 router.get("/all", userController.getAllUsers);
 router.get("/:username", userController.getUserByUsername);
 router.post("/register", userController.registerUser);
+router.post("/login", userController.loginUser);
+router.post("/auth/google", userController.googleAuth);
 
 // Protected routes
 router.put("/:username", authenticate, userController.updateUser);
