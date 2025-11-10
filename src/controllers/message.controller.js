@@ -16,6 +16,7 @@ exports.createMessage = async (req, res) => {
     ownerUsername,
     templateType,
     personalizedText,
+    countdownDate,
     mediaUrls,
     mediaType,
   } = req.body;
@@ -38,8 +39,8 @@ exports.createMessage = async (req, res) => {
   // Generate unique message URL
   const messageUrl = generateMessageUrl();
 
-  // Create message
-  const message = await Message.create({
+  // Create message data
+  const messageData = {
     ownerEmail,
     ownerUsername,
     templateType,
@@ -49,7 +50,15 @@ exports.createMessage = async (req, res) => {
     coinsSpent: coinsRequired,
     messageUrl,
     timesOpened: 0,
-  });
+  };
+
+  // Add countdownDate if provided
+  if (countdownDate) {
+    messageData.countdownDate = countdownDate;
+  }
+
+  // Create message
+  const message = await Message.create(messageData);
 
   // Deduct coins from user
   user.merryCoins -= coinsRequired;
@@ -94,15 +103,17 @@ exports.createMessage = async (req, res) => {
 exports.viewMessage = async (req, res) => {
   const { messageUrl } = req.params;
 
-  const message = await Message.findOne({ messageUrl });
+  // Increment times opened and fetch message in one operation
+  // Using findOneAndUpdate to avoid validation issues with old data
+  const message = await Message.findOneAndUpdate(
+    { messageUrl },
+    { $inc: { timesOpened: 1 } },
+    { new: true, runValidators: false }
+  );
 
   if (!message) {
     return res.status(404).json(ApiResponse.error("Message not found"));
   }
-
-  // Increment times opened
-  message.timesOpened += 1;
-  await message.save();
 
   // Update stats
   const user = await User.findOne({ username: message.ownerUsername });
@@ -131,7 +142,13 @@ exports.viewMessage = async (req, res) => {
  */
 exports.editMessage = async (req, res) => {
   const { messageUrl } = req.params;
-  const { templateType, personalizedText, mediaUrls, mediaType } = req.body;
+  const {
+    templateType,
+    personalizedText,
+    countdownDate,
+    mediaUrls,
+    mediaType,
+  } = req.body;
 
   const message = await Message.findOne({ messageUrl });
 
@@ -142,6 +159,7 @@ exports.editMessage = async (req, res) => {
   // Update fields
   if (templateType) message.templateType = templateType;
   if (personalizedText) message.personalizedText = personalizedText;
+  if (countdownDate !== undefined) message.countdownDate = countdownDate;
   if (mediaUrls) message.mediaUrls = mediaUrls;
   if (mediaType) message.mediaType = mediaType;
 

@@ -21,16 +21,19 @@ exports.createMessage = Joi.object({
   ownerUsername: Joi.string().required(),
   templateType: Joi.string()
     .valid(
-      "BIRTHDAY",
-      "CHRISTMAS",
-      "NEW_YEAR",
-      "VALENTINE",
-      "ANNIVERSARY",
-      "GRADUATION",
-      "CUSTOM"
+      "MEMORY LANE SLIDESHOW",
+      "FIREPLACE CHAT",
+      "CONFETTI CANNON COUNTDOWN",
+      "GRATITUDE JAR",
+      "PERSONALIZED CAROL"
     )
     .required(),
   personalizedText: Joi.string().min(1).max(5000).required(),
+  countdownDate: Joi.date().iso().when("templateType", {
+    is: "CONFETTI CANNON COUNTDOWN",
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
   mediaUrls: Joi.array().items(Joi.string().uri()),
   mediaType: Joi.array().items(Joi.string()),
 });
@@ -38,15 +41,18 @@ exports.createMessage = Joi.object({
 // Message edit validation
 exports.editMessage = Joi.object({
   templateType: Joi.string().valid(
-    "BIRTHDAY",
-    "CHRISTMAS",
-    "NEW_YEAR",
-    "VALENTINE",
-    "ANNIVERSARY",
-    "GRADUATION",
-    "CUSTOM"
+    "MEMORY LANE SLIDESHOW",
+    "FIREPLACE CHAT",
+    "CONFETTI CANNON COUNTDOWN",
+    "GRATITUDE JAR",
+    "PERSONALIZED CAROL"
   ),
   personalizedText: Joi.string().min(1).max(5000),
+  countdownDate: Joi.date().iso().when("templateType", {
+    is: "CONFETTI CANNON COUNTDOWN",
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
   mediaUrls: Joi.array().items(Joi.string().uri()),
   mediaType: Joi.array().items(Joi.string()),
 });

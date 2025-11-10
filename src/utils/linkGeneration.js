@@ -2,9 +2,19 @@ const crypto = require("crypto");
 
 /**
  * Generate a unique URL for a message
+ * Returns 7 alphanumeric characters (uppercase and lowercase)
  */
 const generateMessageUrl = () => {
-  return crypto.randomBytes(8).toString("hex");
+  const chars =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  const randomBytes = crypto.randomBytes(7);
+
+  for (let i = 0; i < 7; i++) {
+    result += chars[randomBytes[i] % chars.length];
+  }
+
+  return result;
 };
 
 /**

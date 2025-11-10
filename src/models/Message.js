@@ -15,19 +15,23 @@ const messageSchema = new mongoose.Schema(
     templateType: {
       type: String,
       enum: [
-        "BIRTHDAY",
-        "CHRISTMAS",
-        "NEW_YEAR",
-        "VALENTINE",
-        "ANNIVERSARY",
-        "GRADUATION",
-        "CUSTOM",
+        "MEMORY LANE SLIDESHOW",
+        "FIREPLACE CHAT",
+        "CONFETTI CANNON COUNTDOWN",
+        "GRATITUDE JAR",
+        "PERSONALIZED CAROL",
       ],
       required: true,
     },
     personalizedText: {
       type: String,
       required: true,
+    },
+    countdownDate: {
+      type: Date,
+      required: function () {
+        return this.templateType === "CONFETTI CANNON COUNTDOWN";
+      },
     },
     mediaUrls: [
       {
