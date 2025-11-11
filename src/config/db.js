@@ -8,19 +8,18 @@ let cachedConnection = null;
 let connectionPromise = null;
 
 const connectDB = async () => {
-  // Return cached connection if it exists and is ready
-  if (cachedConnection && mongoose.connection.readyState === 1) {
-    console.log("✅ Using cached MongoDB connection");
-    return cachedConnection;
-  }
-
-  // If connection is in progress, wait for it
-  if (connectionPromise) {
-    console.log("⏳ Waiting for existing connection attempt...");
-    return connectionPromise;
-  }
-
   try {
+    // Return cached connection if it exists and is ready
+    if (cachedConnection && mongoose.connection.readyState === 1) {
+      return cachedConnection;
+    }
+
+    // If connection is in progress, wait for it
+    if (connectionPromise) {
+      console.log("⏳ Waiting for existing connection attempt...");
+      return connectionPromise;
+    }
+
     const uri =
       process.env.MONGODB_URI || "mongodb://localhost:27017/merrytext";
 
@@ -42,12 +41,18 @@ const connectDB = async () => {
     if (mongoose.connection.readyState === 2) {
       console.log("⏳ MongoDB connection in progress...");
       connectionPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error("Connection timeout"));
+        }, 15000);
+
         mongoose.connection.once("connected", () => {
+          clearTimeout(timeout);
           cachedConnection = mongoose.connection;
           connectionPromise = null;
           resolve(cachedConnection);
         });
         mongoose.connection.once("error", (err) => {
+          clearTimeout(timeout);
           connectionPromise = null;
           reject(err);
         });

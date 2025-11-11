@@ -113,14 +113,22 @@ if (process.env.VERCEL) {
   // Ensure initialization before handling requests
   app.use(async (req, res, next) => {
     try {
+      // Skip health check endpoint
+      if (req.path === "/" && req.method === "GET") {
+        return next();
+      }
+
       // Wait for warmup to complete
       await warmup;
 
-      // Double-check initialization
+      // Double-check initialization and database connection
       if (!isInitialized) {
         console.log("🔄 Re-attempting initialization...");
         await initialize();
       }
+
+      // Ensure database is actually connected
+      await connectDB();
 
       next();
     } catch (err) {
