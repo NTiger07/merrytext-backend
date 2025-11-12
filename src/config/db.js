@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 // Disable buffering globally - we'll ensure connection before queries
-mongoose.set("bufferCommands", false);
+mongoose.set("bufferCommands", true);
 
 // Cache the connection for serverless environments
 let cachedConnection = null;
