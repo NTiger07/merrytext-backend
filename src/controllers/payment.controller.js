@@ -2,6 +2,13 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const User = require("../models/User");
 const Transaction = require("../models/Transaction");
 const ApiResponse = require("../utils/ApiResponse");
+const {
+  awardXpToUserByUsername,
+  getXpForAction,
+} = require("../services/xpService");
+const {
+  checkAchievementsByCategory,
+} = require("../services/achievementService");
 
 /**
  * Create Stripe checkout session
@@ -242,6 +249,23 @@ async function completePayment(session) {
 
   // Save and wait for confirmation
   const savedUser = await user.save();
+
+  // Award XP for purchasing coins
+  try {
+    await awardXpToUserByUsername(
+      user.username,
+      getXpForAction("PURCHASE_COINS")
+    );
+  } catch (err) {
+    console.error("Failed to award XP for coin purchase:", err.message);
+  }
+
+  // Check and unlock coin achievements
+  try {
+    await checkAchievementsByCategory(user.username, "coins");
+  } catch (err) {
+    console.error("Failed to check achievements:", err.message);
+  }
 
   // Update transaction status
   transaction.status = "completed";

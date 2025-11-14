@@ -6,6 +6,13 @@ const {
   getFullViewUrl,
   generateShareableText,
 } = require("../utils/linkGeneration");
+const {
+  awardXpToUserByUsername,
+  getXpForAction,
+} = require("../services/xpService");
+const {
+  checkAchievementsByCategory,
+} = require("../services/achievementService");
 
 /**
  * Create a new message
@@ -69,6 +76,23 @@ exports.createMessage = async (req, res) => {
 
   await user.save();
 
+  // Award XP for sending a message
+  try {
+    await awardXpToUserByUsername(
+      user.username,
+      getXpForAction("MESSAGE_SENT")
+    );
+  } catch (err) {
+    console.error("Failed to award XP for message sent:", err.message);
+  }
+
+  // Check and unlock messaging achievements
+  try {
+    await checkAchievementsByCategory(user.username, "messaging");
+  } catch (err) {
+    console.error("Failed to check achievements:", err.message);
+  }
+
   // Fetch updated user with populated achievements
   const updatedUser = await User.findById(user._id).populate(
     "achievements.achievementId"
@@ -120,6 +144,16 @@ exports.viewMessage = async (req, res) => {
   if (user) {
     user.stats.totalMessagesViewed += 1;
     await user.save();
+
+    // Award XP for message viewed
+    try {
+      await awardXpToUserByUsername(
+        user.username,
+        getXpForAction("MESSAGE_VIEWED")
+      );
+    } catch (err) {
+      console.error("Failed to award XP for message view:", err.message);
+    }
   }
 
   // Prepare response

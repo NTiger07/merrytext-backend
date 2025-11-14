@@ -89,6 +89,8 @@ const initializeUserAchievements = async () => {
     let usersUpdated = 0;
     let achievementsAdded = 0;
 
+    const { recalculateUserXp } = require("../services/xpService");
+
     // For each user, add missing achievements to their achievements array
     for (const user of users) {
       let userModified = false;
@@ -112,6 +114,15 @@ const initializeUserAchievements = async () => {
 
       if (userModified) {
         await user.save();
+        // Recalculate XP for user after adding achievements (safe to run repeatedly)
+        try {
+          await recalculateUserXp(user.username);
+        } catch (err) {
+          console.error(
+            `Failed to recalculate XP for user ${user.username}:`,
+            err.message
+          );
+        }
         usersUpdated++;
       }
     }
