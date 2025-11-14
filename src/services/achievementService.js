@@ -16,11 +16,9 @@ async function checkAndUpdateAchievements(username) {
   if (!user) throw new Error("User not found");
 
   const newlyUnlocked = [];
+  let progressUpdated = false;
 
   for (const userAchievement of user.achievements) {
-    // Skip if already unlocked
-    if (userAchievement.unlocked) continue;
-
     const achievement = userAchievement.achievementId;
     if (!achievement) continue;
 
@@ -72,10 +70,14 @@ async function checkAndUpdateAchievements(username) {
         continue;
     }
 
-    // Update progress
-    userAchievement.progress = Math.min(currentProgress, achievement.total);
+    // Update progress for all achievements (locked and unlocked)
+    const newProgress = Math.min(currentProgress, achievement.total);
+    if (userAchievement.progress !== newProgress) {
+      userAchievement.progress = newProgress;
+      progressUpdated = true;
+    }
 
-    // Unlock if conditions met
+    // Unlock if conditions met and not already unlocked
     if (shouldUnlock && !userAchievement.unlocked) {
       userAchievement.unlocked = true;
       userAchievement.unlockedAt = new Date();
@@ -107,8 +109,8 @@ async function checkAndUpdateAchievements(username) {
     }
   }
 
-  // Save updated achievements
-  if (newlyUnlocked.length > 0) {
+  // Save if any achievements were unlocked or progress was updated
+  if (newlyUnlocked.length > 0 || progressUpdated) {
     await user.save();
   }
 
@@ -128,15 +130,14 @@ async function checkAchievementsByCategory(username, category) {
   if (!user) throw new Error("User not found");
 
   const relevantAchievements = user.achievements.filter(
-    (ua) =>
-      ua.achievementId && ua.achievementId.category === category && !ua.unlocked
+    (ua) => ua.achievementId && ua.achievementId.category === category
   );
 
   if (relevantAchievements.length === 0) {
     return [];
   }
 
-  // Run full check (it will only process relevant ones)
+  // Run full check (it will process all achievements in the category)
   return await checkAndUpdateAchievements(username);
 }
 
