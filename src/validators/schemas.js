@@ -19,6 +19,7 @@ exports.updateUser = Joi.object({
 exports.createMessage = Joi.object({
   ownerEmail: Joi.string().email().required(),
   ownerUsername: Joi.string().required(),
+  ownerName: Joi.string().min(2).max(100).required(),
   templateType: Joi.string()
     .valid(
       "MEMORY LANE SLIDESHOW",

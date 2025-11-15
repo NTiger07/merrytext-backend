@@ -59,7 +59,7 @@ const transactionSchema = new mongoose.Schema(
 
 // Index for faster queries
 transactionSchema.index({ ownerUsername: 1 });
-transactionSchema.index({ stripePaymentIntentId: 1 });
+transactionSchema.index({ stripePaymentIntentId: 1 }, { sparse: true }); // Sparse index to allow multiple nulls
 transactionSchema.index({ status: 1 });
 
 // Post-save hook to add transaction reference to user

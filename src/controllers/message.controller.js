@@ -48,6 +48,7 @@ exports.createMessage = async (req, res) => {
   const {
     ownerEmail,
     ownerUsername,
+    ownerName,
     templateType,
     personalizedText,
     recipientName,
@@ -79,6 +80,7 @@ exports.createMessage = async (req, res) => {
   const messageData = {
     ownerEmail,
     ownerUsername,
+    ownerName,
     templateType,
     personalizedText,
     recipientName: recipientName || null,
@@ -239,7 +241,8 @@ exports.editMessage = async (req, res) => {
   if (templateType) message.templateType = templateType;
   if (personalizedText) message.personalizedText = personalizedText;
   if (recipientName !== undefined) message.recipientName = recipientName;
-  if (isMultipleRecipients !== undefined) message.isMultipleRecipients = isMultipleRecipients;
+  if (isMultipleRecipients !== undefined)
+    message.isMultipleRecipients = isMultipleRecipients;
   if (countdownDate !== undefined) message.countdownDate = countdownDate;
   if (mediaUrls) message.mediaUrls = mediaUrls;
   if (mediaType) message.mediaType = mediaType;

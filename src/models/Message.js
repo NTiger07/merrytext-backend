@@ -12,6 +12,11 @@ const messageSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    ownerName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     templateType: {
       type: String,
       enum: [
