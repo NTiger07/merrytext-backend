@@ -14,7 +14,9 @@ const ADMIN_EMAILS = [
  */
 exports.requireAdmin = async (req, res, next) => {
   try {
-    const { email, username } = req.body;
+    // Check both body and query params for email/username
+    const email = req.body.email || req.query.email;
+    const username = req.body.username || req.query.username;
 
     // Check if email or username is provided
     if (!email && !username) {
