@@ -191,26 +191,89 @@ exports.applyCoupon = async (req, res) => {
       .json(ApiResponse.error("You have already used this coupon"));
   }
 
-  // Mark coupon as used
-  coupon.usedBy.push({
-    username: username,
-    usedAt: new Date(),
-  });
-  coupon.usedCount += 1;
-
-  await coupon.save();
+  // Mark coupon as used with atomic update
+  const updatedCoupon = await Coupon.findOneAndUpdate(
+    { code: code.toUpperCase() },
+    {
+      $push: { usedBy: { username: username, usedAt: new Date() } },
+      $inc: { usedCount: 1 },
+    },
+    { new: true }
+  );
 
   const response = {
     coupon: {
-      code: coupon.code,
-      description: coupon.description,
-      usedCount: coupon.usedCount,
-      maxUsers: coupon.maxUsers,
+      code: updatedCoupon.code,
+      description: updatedCoupon.description,
+      usedCount: updatedCoupon.usedCount,
+      maxUsers: updatedCoupon.maxUsers,
     },
     message: "Coupon applied successfully",
   };
 
   res.json(ApiResponse.success(response));
+};
+
+/**
+ * Increment coupon usage manually (Admin only)
+ */
+exports.incrementCouponUsage = async (req, res) => {
+  const { code } = req.params;
+  const { username, amount } = req.body;
+
+  if (!username) {
+    return res.status(400).json(ApiResponse.error("Username is required"));
+  }
+
+  const incrementAmount = amount || 1;
+
+  // Find coupon
+  const coupon = await Coupon.findOne({ code: code.toUpperCase() });
+
+  if (!coupon) {
+    return res.status(404).json(ApiResponse.error("Coupon not found"));
+  }
+
+  // Increment usage
+  const updatedCoupon = await Coupon.findOneAndUpdate(
+    { code: code.toUpperCase() },
+    {
+      $push: { usedBy: { username: username, usedAt: new Date() } },
+      $inc: { usedCount: incrementAmount },
+    },
+    { new: true }
+  );
+
+  const response = {
+    coupon: {
+      code: updatedCoupon.code,
+      description: updatedCoupon.description,
+      usedCount: updatedCoupon.usedCount,
+      maxUsers: updatedCoupon.maxUsers,
+    },
+    message: `Coupon usage incremented by ${incrementAmount}`,
+  };
+
+  res.json(ApiResponse.success(response));
+};
+
+/**
+ * Activate coupon
+ */
+exports.activateCoupon = async (req, res) => {
+  const { code } = req.params;
+
+  const coupon = await Coupon.findOneAndUpdate(
+    { code: code.toUpperCase() },
+    { isActive: true },
+    { new: true }
+  );
+
+  if (!coupon) {
+    return res.status(404).json(ApiResponse.error("Coupon not found"));
+  }
+
+  res.json(ApiResponse.success(coupon, "Coupon activated successfully"));
 };
 
 /**

@@ -42,6 +42,16 @@ router.post(
   couponController.applyCoupon
 );
 
+// Increment coupon usage manually (Admin only)
+router.patch(
+  "/:code/increment",
+  requireAdmin,
+  couponController.incrementCouponUsage
+);
+
+// Activate coupon (Admin only)
+router.patch("/:code/activate", requireAdmin, couponController.activateCoupon);
+
 // Deactivate coupon (Admin only)
 router.patch(
   "/:code/deactivate",

@@ -42,6 +42,49 @@ const calculateMediaCost = (mediaTypes) => {
 };
 
 /**
+ * Calculate and update user streak
+ */
+const updateUserStreak = (user) => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  if (!user.stats.lastMessageDate) {
+    // First message ever
+    user.stats.currentStreak = 1;
+    user.stats.longestStreak = 1;
+    user.stats.lastMessageDate = now;
+    return;
+  }
+
+  const lastMessageDate = new Date(user.stats.lastMessageDate);
+  const lastMessageDay = new Date(
+    lastMessageDate.getFullYear(),
+    lastMessageDate.getMonth(),
+    lastMessageDate.getDate()
+  );
+
+  const daysDifference = Math.floor(
+    (today - lastMessageDay) / (1000 * 60 * 60 * 24)
+  );
+
+  if (daysDifference === 0) {
+    // Same day, no streak change
+    return;
+  } else if (daysDifference === 1) {
+    // Consecutive day
+    user.stats.currentStreak += 1;
+    if (user.stats.currentStreak > user.stats.longestStreak) {
+      user.stats.longestStreak = user.stats.currentStreak;
+    }
+  } else {
+    // Streak broken
+    user.stats.currentStreak = 1;
+  }
+
+  user.stats.lastMessageDate = now;
+};
+
+/**
  * Create a new message
  */
 exports.createMessage = async (req, res) => {
@@ -106,6 +149,18 @@ exports.createMessage = async (req, res) => {
   // Update user stats
   user.stats.totalMessagesSent += 1;
   user.stats.totalCoinsSpent += coinsRequired;
+
+  // Update unique recipients if recipientName is provided
+  if (recipientName && !isMultipleRecipients) {
+    const recipientNameLower = recipientName.toLowerCase().trim();
+    if (!user.stats.recipientsList.includes(recipientNameLower)) {
+      user.stats.recipientsList.push(recipientNameLower);
+      user.stats.uniqueRecipients = user.stats.recipientsList.length;
+    }
+  }
+
+  // Update streak
+  updateUserStreak(user);
 
   await user.save();
 

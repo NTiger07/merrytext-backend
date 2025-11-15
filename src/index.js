@@ -21,6 +21,9 @@ const {
   initializeUserAchievements,
 } = require("./scripts/initAchievements");
 
+// Import cleanup services
+const { startTransactionCleanupJob } = require("./services/transactionCleanup");
+
 const app = express();
 
 // Middleware
@@ -90,6 +93,9 @@ const initialize = async () => {
       console.log("🎯 Initializing achievements system...");
       await initializeAchievements();
       await initializeUserAchievements();
+
+      // Start transaction cleanup job (checks every hour, marks as failed after 12 hours)
+      startTransactionCleanupJob(60, 12);
 
       isInitialized = true;
       console.log("✅ Initialization complete");

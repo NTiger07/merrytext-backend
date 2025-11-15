@@ -29,6 +29,12 @@ const userStatsSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    recipientsList: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
     messagesViewedToday: {
       type: Number,
       default: 0,
