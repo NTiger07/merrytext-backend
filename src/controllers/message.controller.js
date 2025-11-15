@@ -15,6 +15,32 @@ const {
 } = require("../services/achievementService");
 
 /**
+ * Calculate coins required based on media types
+ */
+const calculateMediaCost = (mediaTypes) => {
+  if (!mediaTypes || mediaTypes.length === 0) {
+    return 2; // Normal text cost
+  }
+
+  const costPerType = {
+    video: 7,
+    picture: 4,
+    image: 4, // alias for picture
+    audio: 5,
+    text: 2,
+    normaltext: 2,
+  };
+
+  let totalCost = 0;
+  mediaTypes.forEach((type) => {
+    const mediaType = type.toLowerCase();
+    totalCost += costPerType[mediaType] || 2; // Default to 2 if type not found
+  });
+
+  return totalCost;
+};
+
+/**
  * Create a new message
  */
 exports.createMessage = async (req, res) => {
@@ -37,8 +63,8 @@ exports.createMessage = async (req, res) => {
     return res.status(404).json(ApiResponse.error("User not found"));
   }
 
-  // Check if user has enough coins (assume 1 coin per message)
-  const coinsRequired = 1;
+  // Calculate coins required based on media types
+  const coinsRequired = calculateMediaCost(mediaType);
   if (user.merryCoins < coinsRequired) {
     return res.status(400).json(ApiResponse.error("Insufficient coins"));
   }

@@ -82,7 +82,7 @@ exports.registerUser = async (req, res) => {
     name,
     password,
     authProvider: authProvider || "email",
-    merryCoins: 100, // Starting coins
+    merryCoins: 50, // Starting coins
     totalXp: 0,
     level: 1,
   });
@@ -237,7 +237,7 @@ exports.googleAuth = async (req, res) => {
         googleId,
         emailVerified: email_verified,
         profilePicture: picture,
-        merryCoins: 100, // Starting coins
+        merryCoins: 50, // Starting coins
         totalXp: 0,
         level: 1,
       });
