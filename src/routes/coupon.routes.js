@@ -2,38 +2,54 @@ const express = require("express");
 const router = express.Router();
 const couponController = require("../controllers/coupon.controller");
 const { validate } = require("../middleware/validate");
+const { requireAdmin } = require("../middleware/adminAuth");
 const {
   createCoupon,
   validateCoupon,
   applyCoupon,
 } = require("../validators/schemas");
 
-// Create a new coupon (Admin)
-router.post("/", validate(createCoupon), couponController.createCoupon);
+// Create a new coupon (Admin only)
+router.post(
+  "/",
+  requireAdmin,
+  validate(createCoupon),
+  couponController.createCoupon
+);
 
-// Get all coupons
-router.get("/", couponController.getAllCoupons);
+// Get all coupons (Admin only)
+router.get("/", requireAdmin, couponController.getAllCoupons);
 
-// Get active coupons
-router.get("/active", couponController.getActiveCoupons);
+// Get active coupons (Admin only)
+router.get("/active", requireAdmin, couponController.getActiveCoupons);
 
-// Get coupon by code
-router.get("/:code", couponController.getCouponByCode);
+// Get coupon by code (Admin only)
+router.get("/:code", requireAdmin, couponController.getCouponByCode);
 
-// Validate coupon
+// Validate coupon (Admin only)
 router.post(
   "/validate",
+  requireAdmin,
   validate(validateCoupon),
   couponController.validateCoupon
 );
 
-// Apply coupon
-router.post("/apply", validate(applyCoupon), couponController.applyCoupon);
+// Apply coupon (Admin only)
+router.post(
+  "/apply",
+  requireAdmin,
+  validate(applyCoupon),
+  couponController.applyCoupon
+);
 
-// Deactivate coupon
-router.patch("/:code/deactivate", couponController.deactivateCoupon);
+// Deactivate coupon (Admin only)
+router.patch(
+  "/:code/deactivate",
+  requireAdmin,
+  couponController.deactivateCoupon
+);
 
-// Delete coupon
-router.delete("/:code", couponController.deleteCoupon);
+// Delete coupon (Admin only)
+router.delete("/:code", requireAdmin, couponController.deleteCoupon);
 
 module.exports = router;

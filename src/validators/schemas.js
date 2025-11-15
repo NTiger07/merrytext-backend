@@ -73,6 +73,8 @@ exports.createCheckoutSession = Joi.object({
 
 // Coupon validation
 exports.createCoupon = Joi.object({
+  email: Joi.string().email(),
+  username: Joi.string(),
   code: Joi.string().min(3).max(50).required(),
   description: Joi.string().min(5).max(500).required(),
   type: Joi.string().valid("time-based", "user-based").required(),
@@ -90,15 +92,19 @@ exports.createCoupon = Joi.object({
   }),
   minPurchaseAmount: Joi.number().min(0),
   createdBy: Joi.string(),
-});
+}).or("email", "username");
 
 exports.validateCoupon = Joi.object({
+  email: Joi.string().email(),
+  adminUsername: Joi.string(),
   code: Joi.string().required(),
   username: Joi.string().required(),
   purchaseAmount: Joi.number().min(0),
-});
+}).or("email", "adminUsername");
 
 exports.applyCoupon = Joi.object({
+  email: Joi.string().email(),
+  adminUsername: Joi.string(),
   code: Joi.string().required(),
   username: Joi.string().required(),
-});
+}).or("email", "adminUsername");
