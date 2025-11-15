@@ -10,6 +10,7 @@ const userRoutes = require("./routes/user.routes");
 const messageRoutes = require("./routes/message.routes");
 const statsRoutes = require("./routes/stats.routes");
 const paymentRoutes = require("./routes/payment.routes");
+const couponRoutes = require("./routes/coupon.routes");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -58,6 +59,7 @@ app.use("/merrytext/api/v1/user", userRoutes);
 app.use("/merrytext/api/v1/message", messageRoutes);
 app.use("/merrytext/api/v1/stats", statsRoutes);
 app.use("/merrytext/api/v1/payment", paymentRoutes);
+app.use("/merrytext/api/v1/coupon", couponRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

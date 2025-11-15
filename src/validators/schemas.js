@@ -70,3 +70,35 @@ exports.createCheckoutSession = Joi.object({
   coins: Joi.number().integer().min(1).required(),
   priceId: Joi.string(),
 });
+
+// Coupon validation
+exports.createCoupon = Joi.object({
+  code: Joi.string().min(3).max(50).required(),
+  description: Joi.string().min(5).max(500).required(),
+  type: Joi.string().valid("time-based", "user-based").required(),
+  discountType: Joi.string().valid("percentage", "fixed-coins").required(),
+  discountValue: Joi.number().min(0).required(),
+  expiresAt: Joi.date().iso().when("type", {
+    is: "time-based",
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  maxUsers: Joi.number().integer().min(1).when("type", {
+    is: "user-based",
+    then: Joi.required(),
+    otherwise: Joi.optional(),
+  }),
+  minPurchaseAmount: Joi.number().min(0),
+  createdBy: Joi.string(),
+});
+
+exports.validateCoupon = Joi.object({
+  code: Joi.string().required(),
+  username: Joi.string().required(),
+  purchaseAmount: Joi.number().min(0),
+});
+
+exports.applyCoupon = Joi.object({
+  code: Joi.string().required(),
+  username: Joi.string().required(),
+});
