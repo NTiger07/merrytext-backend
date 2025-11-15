@@ -19,7 +19,15 @@ const {
  * Calculate coins required based on media types
  */
 const calculateMediaCost = (mediaTypes) => {
-  if (!mediaTypes || mediaTypes.length === 0) {
+  // Ensure mediaTypes is always an array
+  if (!mediaTypes) {
+    return 2; // Normal text cost
+  }
+
+  // Convert to array if it's a single value
+  const typesArray = Array.isArray(mediaTypes) ? mediaTypes : [mediaTypes];
+
+  if (typesArray.length === 0) {
     return 2; // Normal text cost
   }
 
@@ -33,7 +41,7 @@ const calculateMediaCost = (mediaTypes) => {
   };
 
   let totalCost = 0;
-  mediaTypes.forEach((type) => {
+  typesArray.forEach((type) => {
     const mediaType = type.toLowerCase();
     totalCost += costPerType[mediaType] || 2; // Default to 2 if type not found
   });
