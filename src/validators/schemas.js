@@ -29,6 +29,8 @@ exports.createMessage = Joi.object({
     )
     .required(),
   personalizedText: Joi.string().min(1).max(5000).required(),
+  recipientName: Joi.string().min(1).max(200),
+  isMultipleRecipients: Joi.boolean(),
   countdownDate: Joi.date().iso().when("templateType", {
     is: "CONFETTI CANNON COUNTDOWN",
     then: Joi.required(),
@@ -48,6 +50,8 @@ exports.editMessage = Joi.object({
     "PERSONALIZED CAROL"
   ),
   personalizedText: Joi.string().min(1).max(5000),
+  recipientName: Joi.string().min(1).max(200).allow(null),
+  isMultipleRecipients: Joi.boolean(),
   countdownDate: Joi.date().iso().when("templateType", {
     is: "CONFETTI CANNON COUNTDOWN",
     then: Joi.required(),

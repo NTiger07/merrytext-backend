@@ -27,6 +27,14 @@ const messageSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    recipientName: {
+      type: String,
+      trim: true,
+    },
+    isMultipleRecipients: {
+      type: Boolean,
+      default: false,
+    },
     countdownDate: {
       type: Date,
       required: function () {
