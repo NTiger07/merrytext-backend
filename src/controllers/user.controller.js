@@ -90,6 +90,18 @@ exports.registerUser = async (req, res) => {
   // Initialize achievements for new user
   await initializeUserAchievementsForUser(user._id);
 
+  // Create transaction for initial coins
+  await Transaction.create({
+    ownerUsername: user.username,
+    ownerEmail: user.email,
+    type: "purchase",
+    coins: 50,
+    coinsPurchased: 50,
+    status: "completed",
+    completedAt: new Date(),
+    description: "Welcome bonus - Initial coins",
+  });
+
   // Fetch user with populated achievements
   const populatedUser = await User.findById(user._id)
     .select("-password")
@@ -244,6 +256,18 @@ exports.googleAuth = async (req, res) => {
 
       // Initialize achievements for new user
       await initializeUserAchievementsForUser(user._id);
+
+      // Create transaction for initial coins
+      await Transaction.create({
+        ownerUsername: user.username,
+        ownerEmail: user.email,
+        type: "purchase",
+        coins: 50,
+        coinsPurchased: 50,
+        status: "completed",
+        completedAt: new Date(),
+        description: "Welcome bonus - Initial coins",
+      });
     }
 
     // Generate JWT token
