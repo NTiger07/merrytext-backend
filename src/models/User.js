@@ -139,6 +139,19 @@ const userSchema = new mongoose.Schema(
       type: [userAchievementSchema],
       default: [],
     },
+    // Virtual references to related data
+    messages: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Message",
+      },
+    ],
+    transactions: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Transaction",
+      },
+    ],
   },
   {
     timestamps: true, // Automatically adds createdAt and updatedAt

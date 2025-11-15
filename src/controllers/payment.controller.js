@@ -70,9 +70,11 @@ exports.createCheckoutSession = async (req, res) => {
     await Transaction.create({
       ownerUsername,
       ownerEmail,
+      type: "purchase",
       stripePaymentIntentId: session.id,
       amount,
-      coinsPurchased: coins,
+      coins: coins,
+      coinsPurchased: coins, // Keep for backward compatibility
       status: "pending",
     });
 
@@ -156,7 +158,8 @@ exports.verifyPaymentSession = async (req, res) => {
       paymentStatus: session.payment_status,
       transactionStatus: updatedTransaction.status,
       amount: updatedTransaction.amount,
-      coinsPurchased: updatedTransaction.coinsPurchased,
+      coins: updatedTransaction.coins,
+      coinsPurchased: updatedTransaction.coinsPurchased, // Keep for backward compatibility
       completedAt: updatedTransaction.completedAt,
       user: user
         ? {

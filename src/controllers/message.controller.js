@@ -1,5 +1,6 @@
 const Message = require("../models/Message");
 const User = require("../models/User");
+const Transaction = require("../models/Transaction");
 const ApiResponse = require("../utils/ApiResponse");
 const {
   generateMessageUrl,
@@ -101,6 +102,18 @@ exports.createMessage = async (req, res) => {
   user.stats.totalCoinsSpent += coinsRequired;
 
   await user.save();
+
+  // Create spending transaction
+  await Transaction.create({
+    ownerUsername: user.username,
+    ownerEmail: user.email,
+    type: "spending",
+    coins: coinsRequired,
+    status: "completed",
+    completedAt: new Date(),
+    messageId: message._id,
+    description: `Message created: ${message.templateType}`,
+  });
 
   // Award XP for sending a message
   try {

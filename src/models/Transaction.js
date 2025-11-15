@@ -12,28 +12,44 @@ const transactionSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+    type: {
+      type: String,
+      enum: ["purchase", "spending"],
+      required: true,
+    },
     stripePaymentIntentId: {
       type: String,
-      required: true,
-      unique: true,
+      sparse: true, // Only required for purchases
     },
     amount: {
       type: Number,
-      required: true,
-      min: 0, // in cents
+      min: 0, // in cents (only for purchases)
     },
-    coinsPurchased: {
+    coins: {
       type: Number,
       required: true,
+      min: 0,
+    },
+    // Legacy field for backward compatibility
+    coinsPurchased: {
+      type: Number,
       min: 0,
     },
     status: {
       type: String,
       enum: ["pending", "completed", "failed"],
-      default: "pending",
+      default: "completed",
     },
     completedAt: {
       type: Date,
+    },
+    // For spending transactions
+    messageId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
+    },
+    description: {
+      type: String,
     },
   },
   {
@@ -45,5 +61,18 @@ const transactionSchema = new mongoose.Schema(
 transactionSchema.index({ ownerUsername: 1 });
 transactionSchema.index({ stripePaymentIntentId: 1 });
 transactionSchema.index({ status: 1 });
+
+// Post-save hook to add transaction reference to user
+transactionSchema.post("save", async function (doc) {
+  try {
+    const User = mongoose.model("User");
+    await User.findOneAndUpdate(
+      { username: doc.ownerUsername },
+      { $addToSet: { transactions: doc._id } }
+    );
+  } catch (error) {
+    console.error("Error updating user transactions:", error);
+  }
+});
 
 module.exports = mongoose.model("Transaction", transactionSchema);

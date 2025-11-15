@@ -37,16 +37,7 @@ async function awardXpToUserByUsername(username, xpAmount) {
   const newLevel = calculateLevel(newTotal);
 
   user.totalXp = newTotal;
-
-  // If leveled up, award 10 coins per level gained
-  if (newLevel > oldLevel) {
-    const levelsGained = newLevel - oldLevel;
-    user.merryCoins = (user.merryCoins || 0) + levelsGained * 10;
-    user.level = newLevel;
-  } else {
-    // Ensure level is consistent with XP
-    user.level = oldLevel;
-  }
+  user.level = newLevel;
 
   await user.save();
 

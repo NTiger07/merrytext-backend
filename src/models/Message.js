@@ -70,4 +70,17 @@ messageSchema.index({ ownerUsername: 1 });
 messageSchema.index({ messageUrl: 1 });
 messageSchema.index({ createdAt: -1 });
 
+// Post-save hook to add message reference to user
+messageSchema.post("save", async function (doc) {
+  try {
+    const User = mongoose.model("User");
+    await User.findOneAndUpdate(
+      { username: doc.ownerUsername },
+      { $addToSet: { messages: doc._id } }
+    );
+  } catch (error) {
+    console.error("Error updating user messages:", error);
+  }
+});
+
 module.exports = mongoose.model("Message", messageSchema);
