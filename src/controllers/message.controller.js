@@ -32,10 +32,10 @@ const calculateMediaCost = (mediaTypes) => {
   }
 
   const costPerType = {
-    video: 7,
-    picture: 4,
-    image: 4, // alias for picture
-    audio: 5,
+    video: 5,
+    picture: 3,
+    image: 3, // alias for picture
+    audio: 4,
     text: 2,
     normaltext: 2,
   };

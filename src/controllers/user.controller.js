@@ -82,7 +82,7 @@ exports.registerUser = async (req, res) => {
     name,
     password,
     authProvider: authProvider || "email",
-    merryCoins: 50, // Starting coins
+    merryCoins: 20, // Starting coins
     totalXp: 0,
     level: 1,
   });
@@ -95,8 +95,8 @@ exports.registerUser = async (req, res) => {
     ownerUsername: user.username,
     ownerEmail: user.email,
     type: "purchase",
-    coins: 50,
-    coinsPurchased: 50,
+    coins: 20,
+    coinsPurchased: 20,
     status: "completed",
     completedAt: new Date(),
     description: "Welcome bonus - Initial coins",
@@ -249,7 +249,7 @@ exports.googleAuth = async (req, res) => {
         googleId,
         emailVerified: email_verified,
         profilePicture: picture,
-        merryCoins: 50, // Starting coins
+        merryCoins: 20, // Starting coins
         totalXp: 0,
         level: 1,
       });
@@ -262,8 +262,8 @@ exports.googleAuth = async (req, res) => {
         ownerUsername: user.username,
         ownerEmail: user.email,
         type: "purchase",
-        coins: 50,
-        coinsPurchased: 50,
+        coins: 20,
+        coinsPurchased: 20,
         status: "completed",
         completedAt: new Date(),
         description: "Welcome bonus - Initial coins",
