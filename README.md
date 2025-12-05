@@ -104,6 +104,86 @@ All API responses follow a consistent structure using the `ApiResponse` wrapper 
 
 ---
 
+## AI Endpoints
+
+### 1. Generate AI Message
+
+Generate AI-powered messages using Google Gemini for roasts or template-based messages.
+
+- **Method:** `POST`
+- **Path:** `/merrytext/api/v1/ai/generate-message`
+- **Authentication:** Required
+- **Rate Limit:** 10 requests per minute per user
+
+**Request Body (AI Roast Generator):**
+
+```json
+{
+  "templateType": "AI ROAST GENERATOR",
+  "friendInfo": {
+    "name": "Mike",
+    "traits": "always late, terrible cook, gym fanatic",
+    "funnyMemory": "fell asleep during our movie marathon",
+    "relationship": "college roommate"
+  }
+}
+```
+
+**Request Body (Template Message):**
+
+```json
+{
+  "templateType": "FIREPLACE CHAT",
+  "prompt": "Write a heartfelt holiday message about family traditions and spending time together"
+}
+```
+
+**Request Fields:**
+
+| Field                     | Type   | Required                  | Description                                       |
+| ------------------------- | ------ | ------------------------- | ------------------------------------------------- |
+| `templateType`            | string | Yes                       | Template type (e.g., "AI ROAST GENERATOR")        |
+| `prompt`                  | string | Yes (for non-roast)       | User's message generation prompt (max 500 chars)  |
+| `friendInfo`              | object | Yes (for roast generator) | Friend information for roast generation           |
+| `friendInfo.name`         | string | Yes (if friendInfo)       | Friend's name (max 50 chars)                      |
+| `friendInfo.traits`       | string | Yes (if friendInfo)       | Personality traits (max 200 chars)                |
+| `friendInfo.funnyMemory`  | string | No                        | Optional funny memory (max 300 chars)             |
+| `friendInfo.relationship` | string | No                        | Optional relationship description (max 100 chars) |
+
+**Success Response (200):**
+
+```json
+{
+  "success": true,
+  "generatedText": "Hey Mike! Let me tell you about this guy who considers 'fashionably late' a personality trait..."
+}
+```
+
+**Error Response (400/429/500):**
+
+```json
+{
+  "success": false,
+  "error": "Error message describing what went wrong"
+}
+```
+
+**Supported Template Types:**
+
+- `AI ROAST GENERATOR` - Requires `friendInfo`
+- `FIREPLACE CHAT` - Requires `prompt`
+- `CONFETTI CANNON COUNTDOWN` - Requires `prompt`
+- `GRATITUDE JAR` - Requires `prompt`
+- `PERSONALIZED CAROL` - Requires `prompt`
+- `MEMORY LANE SLIDESHOW` - Requires `prompt`
+
+**Rate Limiting:**
+
+- Maximum 10 requests per minute per authenticated user
+- Returns 429 status when limit exceeded
+
+---
+
 ## Message Endpoints
 
 ### 1. Create Message
@@ -1625,6 +1705,192 @@ Ensure your frontend domain is whitelisted in the backend CORS configuration to 
 - [Stripe Checkout Documentation](https://stripe.com/docs/payments/checkout)
 - [MongoDB Mongoose Guide](https://mongoosejs.com/docs/guide.html)
 - [Express.js Documentation](https://expressjs.com/)
+
+---
+
+## AI Features Setup & Configuration
+
+### Overview
+
+The MerryText backend includes AI-powered message generation using Google Gemini API. This enables two key features:
+
+1. **AI Roast Generator** - Generates personalized, friendly roasts based on friend information
+2. **AI Message Generation** - Generates messages for templates based on user prompts
+
+### Quick Start
+
+#### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+The following packages were added:
+
+- `@google/generative-ai` - Google Gemini AI SDK
+- `express-rate-limit` - Rate limiting for API protection
+
+#### 2. Configure Environment Variables
+
+Copy `.env.example` to `.env` and add your Google Gemini API key:
+
+```env
+GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+**Get your API key**: https://ai.google.dev/
+
+**Model options**:
+
+- `gemini-1.5-flash` - Faster, cheaper (recommended for production)
+- `gemini-1.5-pro` - More capable, slower, more expensive
+
+#### 3. Test the API
+
+Run the server:
+
+```bash
+npm run dev
+```
+
+### Validation Rules
+
+#### AI Roast Generator
+
+- `friendInfo.name` - Required, max 50 characters
+- `friendInfo.traits` - Required, max 200 characters
+- `friendInfo.funnyMemory` - Optional, max 300 characters
+- `friendInfo.relationship` - Optional, max 100 characters
+
+#### Other Templates
+
+- `prompt` - Required, max 500 characters
+
+### Security Features
+
+1. **Authentication Required** - All AI endpoints require valid JWT token
+2. **Input Validation** - Strict validation on all inputs with length limits
+3. **Rate Limiting** - Prevents abuse and controls API costs (10 requests/min per user)
+4. **Content Safety** - Gemini API includes built-in safety filters
+5. **Error Sanitization** - Internal errors are not exposed to clients
+6. **Request Logging** - All AI requests are logged for monitoring
+
+### Testing
+
+Run the test suite:
+
+```bash
+npm test
+```
+
+Run specific AI tests:
+
+```bash
+npm test -- ai.test.js
+```
+
+### Monitoring
+
+The AI controller logs the following:
+
+1. **Request Logs**: User ID, Template type, Whether prompt or friendInfo was provided, Timestamp
+2. **Success Logs**: User ID, Template type, Generated text length, Timestamp
+3. **Error Logs**: User ID, Error message and stack trace, Timestamp
+
+### Cost Management
+
+#### Tips to manage Google Gemini API costs:
+
+1. **Use Rate Limiting** - Already configured at 10 requests/min per user
+2. **Monitor Usage** - Check Google Cloud Console regularly
+3. **Set Budget Alerts** - Configure in Google Cloud Console
+4. **Use gemini-1.5-flash** - Cheaper than gemini-1.5-pro
+5. **Token Limits** - Set to 500 max output tokens
+
+#### Pricing (as of Dec 2025)
+
+- **gemini-1.5-flash**: $0.00001875 per 1K characters input, $0.000075 per 1K characters output
+- **gemini-1.5-pro**: Higher rates, check current pricing at https://ai.google.dev/pricing
+
+### AI Error Handling
+
+The API handles various error scenarios:
+
+| Error                 | Status Code | Message                              |
+| --------------------- | ----------- | ------------------------------------ |
+| Missing API key       | 500         | AI service configuration error       |
+| Rate limit exceeded   | 429         | Too many AI generation requests      |
+| Content safety filter | 400         | Input contains inappropriate content |
+| Invalid input         | 400         | Validation error message             |
+| Generic error         | 500         | Failed to generate message           |
+
+### AI File Structure
+
+```
+src/
+├── controllers/
+│   └── ai.controller.js        # AI generation logic
+├── routes/
+│   └── ai.routes.js             # AI route definitions
+└── index.js                      # Updated with AI routes
+
+__tests__/
+└── ai.test.js                    # AI feature tests
+
+.env.example                      # Environment variable template
+```
+
+### Troubleshooting
+
+#### "AI service configuration error"
+
+- Check that `GOOGLE_GEMINI_API_KEY` is set in your `.env` file
+- Verify the API key is valid at https://ai.google.dev/
+
+#### "Too many AI generation requests"
+
+- You've hit the rate limit (10 requests/minute)
+- Wait 60 seconds before trying again
+
+#### "Your input contains inappropriate content"
+
+- Gemini's safety filters blocked the content
+- Modify your input to remove potentially inappropriate content
+
+#### Empty or no response
+
+- Check your internet connection
+- Verify the Gemini API service status
+- Check server logs for detailed error messages
+
+### Production Deployment
+
+#### Checklist
+
+- [ ] Set `GOOGLE_GEMINI_API_KEY` in production environment
+- [ ] Set `GEMINI_MODEL` to `gemini-1.5-flash` (recommended)
+- [ ] Configure rate limiting (default: 10 req/min)
+- [ ] Set up error monitoring and logging
+- [ ] Configure budget alerts in Google Cloud Console
+- [ ] Test all endpoints with production API key
+- [ ] Verify authentication middleware is working
+- [ ] Review and adjust `maxOutputTokens` if needed (default: 500)
+
+#### Environment Variables for Production
+
+```env
+NODE_ENV=production
+GOOGLE_GEMINI_API_KEY=your_production_api_key
+GEMINI_MODEL=gemini-1.5-flash
+```
+
+### AI Support & Resources
+
+- **Google Gemini Docs**: https://ai.google.dev/docs
+- **Node.js SDK**: https://www.npmjs.com/package/@google/generative-ai
+- **Pricing**: https://ai.google.dev/pricing
+- **Safety Settings**: https://ai.google.dev/docs/safety_setting_gemini
 
 ---
 
