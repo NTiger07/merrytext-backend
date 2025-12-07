@@ -1,7 +1,14 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const User = require("../models/User");
 
 // Initialize Gemini API client
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
+// AI Generation costs in MerryCoins
+const AI_COSTS = {
+  "AI ROAST GENERATOR": 4,
+  DEFAULT: 2, // For all other templates
+};
 
 /**
  * Validate the AI generation request
@@ -155,7 +162,8 @@ Generate the message now:`;
  */
 const generateAIMessage = async (req, res) => {
   try {
-    const { templateType, prompt, friendInfo } = req.body;
+    const { templateType, prompt, friendInfo, ownerEmail, ownerUsername } =
+      req.body;
 
     // Validate request
     const validation = validateRequest(req.body);
@@ -166,9 +174,42 @@ const generateAIMessage = async (req, res) => {
       });
     }
 
+    // Require user identification for coin deduction
+    if (!ownerEmail && !ownerUsername) {
+      return res.status(400).json({
+        success: false,
+        error: "User email or username is required",
+      });
+    }
+
+    // Get user from database
+    const user = await User.findOne({
+      $or: [{ email: ownerEmail }, { username: ownerUsername }],
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
+    }
+
+    // Determine coin cost based on template type
+    const coinCost = AI_COSTS[templateType] || AI_COSTS.DEFAULT;
+
+    // Check if user has enough coins
+    if (user.merryCoins < coinCost) {
+      return res.status(400).json({
+        success: false,
+        error: `Insufficient coins. This AI generation costs ${coinCost} MerryCoins. You have ${user.merryCoins}.`,
+        required: coinCost,
+        available: user.merryCoins,
+      });
+    }
+
     // Check if API key is configured
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
-      console.error("GOOGLE_GEMINI_API_KEY is not configured");
+    if (!process.env.GEMINI_API_KEY) {
+      console.error("GEMINI_API_KEY is not configured");
       return res.status(500).json({
         success: false,
         error: "AI service configuration error. Please try again later.",
@@ -199,7 +240,7 @@ const generateAIMessage = async (req, res) => {
     });
 
     // Get the model
-    const modelName = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+    const modelName = process.env.GEMINI_MODEL || "gemini-2.5-flash";
     const model = genAI.getGenerativeModel({ model: modelName });
 
     // Generate content with Gemini
@@ -214,16 +255,52 @@ const generateAIMessage = async (req, res) => {
     });
 
     const response = await result.response;
-    const generatedText = response.text();
+
+    // Log the full response for debugging
+    console.log("Gemini API response:", {
+      candidates: response.candidates,
+      promptFeedback: response.promptFeedback,
+    });
+
+    // Extract text from response
+    let generatedText = "";
+    try {
+      generatedText = response.text();
+    } catch (textError) {
+      // Fallback: manually extract from candidates if .text() fails
+      console.log("Using fallback text extraction");
+      if (response.candidates && response.candidates.length > 0) {
+        const candidate = response.candidates[0];
+        if (candidate.content && candidate.content.parts) {
+          generatedText = candidate.content.parts
+            .map((part) => part.text)
+            .join("");
+        }
+      }
+    }
 
     if (!generatedText || generatedText.trim().length === 0) {
+      // Check if blocked by safety filters
+      if (response.promptFeedback?.blockReason) {
+        throw new Error(
+          `Content blocked: ${response.promptFeedback.blockReason}`
+        );
+      }
       throw new Error("Generated text is empty");
     }
 
+    // Deduct coins from user
+    user.merryCoins -= coinCost;
+    user.stats.totalCoinsSpent += coinCost;
+    await user.save();
+
     // Log successful generation
     console.log("AI generation success:", {
-      userId: req.user?.id,
+      userId: user._id,
+      username: user.username,
       templateType,
+      coinCost,
+      remainingCoins: user.merryCoins,
       generatedLength: generatedText.length,
       timestamp: new Date().toISOString(),
     });
@@ -232,11 +309,14 @@ const generateAIMessage = async (req, res) => {
     return res.status(200).json({
       success: true,
       generatedText: generatedText.trim(),
+      coinCost,
+      remainingCoins: user.merryCoins,
     });
   } catch (error) {
     console.error("AI generation error:", {
       userId: req.user?.id,
       error: error.message,
+      errorName: error.name,
       stack: error.stack,
       timestamp: new Date().toISOString(),
     });
@@ -266,12 +346,22 @@ const generateAIMessage = async (req, res) => {
     // Content safety filter triggered
     if (
       error.message?.includes("safety") ||
-      error.message?.includes("blocked")
+      error.message?.includes("blocked") ||
+      error.message?.includes("Content blocked")
     ) {
       return res.status(400).json({
         success: false,
         error:
           "Your input contains inappropriate content. Please try again with different information.",
+      });
+    }
+
+    // Empty text - might be safety filter
+    if (error.message?.includes("Generated text is empty")) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "Unable to generate content. Please try with different input or try again later.",
       });
     }
 

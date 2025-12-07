@@ -12,6 +12,8 @@ const statsRoutes = require("./routes/stats.routes");
 const paymentRoutes = require("./routes/payment.routes");
 const couponRoutes = require("./routes/coupon.routes");
 const aiRoutes = require("./routes/ai.routes");
+const puzzleRoutes = require("./routes/puzzle.routes");
+const tictactoeRoutes = require("./routes/tictactoe.routes");
 
 // Import middleware
 const errorHandler = require("./middleware/errorHandler");
@@ -65,6 +67,8 @@ app.use("/merrytext/api/v1/stats", statsRoutes);
 app.use("/merrytext/api/v1/payment", paymentRoutes);
 app.use("/merrytext/api/v1/coupon", couponRoutes);
 app.use("/merrytext/api/v1/ai", aiRoutes);
+app.use("/merrytext/api/v1/puzzle", puzzleRoutes);
+app.use("/merrytext/api/v1/tictactoe", tictactoeRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

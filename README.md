@@ -112,14 +112,19 @@ Generate AI-powered messages using Google Gemini for roasts or template-based me
 
 - **Method:** `POST`
 - **Path:** `/merrytext/api/v1/ai/generate-message`
-- **Authentication:** Required
+- **Authentication:** Public (user identification required for coin deduction)
 - **Rate Limit:** 10 requests per minute per user
+- **Cost:**
+  - **AI Roast Generator:** 4 MerryCoins
+  - **Other Templates:** 2 MerryCoins
 
 **Request Body (AI Roast Generator):**
 
 ```json
 {
   "templateType": "AI ROAST GENERATOR",
+  "ownerEmail": "user@example.com",
+  "ownerUsername": "johndoe",
   "friendInfo": {
     "name": "Mike",
     "traits": "always late, terrible cook, gym fanatic",
@@ -134,6 +139,8 @@ Generate AI-powered messages using Google Gemini for roasts or template-based me
 ```json
 {
   "templateType": "FIREPLACE CHAT",
+  "ownerEmail": "user@example.com",
+  "ownerUsername": "johndoe",
   "prompt": "Write a heartfelt holiday message about family traditions and spending time together"
 }
 ```
@@ -143,6 +150,8 @@ Generate AI-powered messages using Google Gemini for roasts or template-based me
 | Field                     | Type   | Required                  | Description                                       |
 | ------------------------- | ------ | ------------------------- | ------------------------------------------------- |
 | `templateType`            | string | Yes                       | Template type (e.g., "AI ROAST GENERATOR")        |
+| `ownerEmail`              | string | Yes (or ownerUsername)    | User's email address                              |
+| `ownerUsername`           | string | Yes (or ownerEmail)       | User's username                                   |
 | `prompt`                  | string | Yes (for non-roast)       | User's message generation prompt (max 500 chars)  |
 | `friendInfo`              | object | Yes (for roast generator) | Friend information for roast generation           |
 | `friendInfo.name`         | string | Yes (if friendInfo)       | Friend's name (max 50 chars)                      |
@@ -155,7 +164,9 @@ Generate AI-powered messages using Google Gemini for roasts or template-based me
 ```json
 {
   "success": true,
-  "generatedText": "Hey Mike! Let me tell you about this guy who considers 'fashionably late' a personality trait..."
+  "generatedText": "Hey Mike! Let me tell you about this guy who considers 'fashionably late' a personality trait...",
+  "coinCost": 4,
+  "remainingCoins": 96
 }
 ```
 
@@ -168,18 +179,29 @@ Generate AI-powered messages using Google Gemini for roasts or template-based me
 }
 ```
 
-**Supported Template Types:**
+**Error Response (Insufficient Coins):**
 
-- `AI ROAST GENERATOR` - Requires `friendInfo`
-- `FIREPLACE CHAT` - Requires `prompt`
-- `CONFETTI CANNON COUNTDOWN` - Requires `prompt`
-- `GRATITUDE JAR` - Requires `prompt`
-- `PERSONALIZED CAROL` - Requires `prompt`
-- `MEMORY LANE SLIDESHOW` - Requires `prompt`
+```json
+{
+  "success": false,
+  "error": "Insufficient coins. This AI generation costs 4 MerryCoins. You have 2.",
+  "required": 4,
+  "available": 2
+}
+```
+
+**Supported Template Types & Costs:**
+
+- `AI ROAST GENERATOR` - Requires `friendInfo` - **4 MerryCoins**
+- `FIREPLACE CHAT` - Requires `prompt` - **2 MerryCoins**
+- `CONFETTI CANNON COUNTDOWN` - Requires `prompt` - **2 MerryCoins**
+- `GRATITUDE JAR` - Requires `prompt` - **2 MerryCoins**
+- `PERSONALIZED CAROL` - Requires `prompt` - **2 MerryCoins**
+- `MEMORY LANE SLIDESHOW` - Requires `prompt` - **2 MerryCoins**
 
 **Rate Limiting:**
 
-- Maximum 10 requests per minute per authenticated user
+- Maximum 10 requests per minute per user
 - Returns 429 status when limit exceeded
 
 ---
@@ -1735,7 +1757,7 @@ The following packages were added:
 Copy `.env.example` to `.env` and add your Google Gemini API key:
 
 ```env
-GOOGLE_GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-1.5-flash
 ```
 
@@ -1845,7 +1867,7 @@ __tests__/
 
 #### "AI service configuration error"
 
-- Check that `GOOGLE_GEMINI_API_KEY` is set in your `.env` file
+- Check that `GEMINI_API_KEY` is set in your `.env` file
 - Verify the API key is valid at https://ai.google.dev/
 
 #### "Too many AI generation requests"
@@ -1868,7 +1890,7 @@ __tests__/
 
 #### Checklist
 
-- [ ] Set `GOOGLE_GEMINI_API_KEY` in production environment
+- [ ] Set `GEMINI_API_KEY` in production environment
 - [ ] Set `GEMINI_MODEL` to `gemini-1.5-flash` (recommended)
 - [ ] Configure rate limiting (default: 10 req/min)
 - [ ] Set up error monitoring and logging
@@ -1881,7 +1903,7 @@ __tests__/
 
 ```env
 NODE_ENV=production
-GOOGLE_GEMINI_API_KEY=your_production_api_key
+GEMINI_API_KEY=your_production_api_key
 GEMINI_MODEL=gemini-1.5-flash
 ```
 
