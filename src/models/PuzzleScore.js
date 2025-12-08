@@ -2,18 +2,13 @@ const mongoose = require("mongoose");
 
 const puzzleScoreSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
     username: {
       type: String,
       required: true,
       trim: true,
       minlength: 3,
       maxlength: 20,
+      index: true,
     },
     puzzleType: {
       type: String,
@@ -38,7 +33,7 @@ const puzzleScoreSchema = new mongoose.Schema(
 puzzleScoreSchema.index({ puzzleType: 1, timeMs: 1, createdAt: 1 });
 
 // Index for user's scores
-puzzleScoreSchema.index({ userId: 1, createdAt: -1 });
+puzzleScoreSchema.index({ username: 1, createdAt: -1 });
 
 const PuzzleScore = mongoose.model("PuzzleScore", puzzleScoreSchema);
 

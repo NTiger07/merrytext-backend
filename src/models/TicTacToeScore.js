@@ -2,18 +2,13 @@ const mongoose = require("mongoose");
 
 const ticTacToeScoreSchema = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-      index: true,
-    },
     username: {
       type: String,
       required: true,
       trim: true,
       minlength: 3,
       maxlength: 20,
+      index: true,
     },
     difficulty: {
       type: String,
@@ -48,7 +43,7 @@ ticTacToeScoreSchema.index({
 });
 
 // Index for user's scores
-ticTacToeScoreSchema.index({ userId: 1, createdAt: -1 });
+ticTacToeScoreSchema.index({ username: 1, createdAt: -1 });
 
 const TicTacToeScore = mongoose.model("TicTacToeScore", ticTacToeScoreSchema);
 

@@ -16,18 +16,10 @@ const POINTS = {
  */
 exports.submitScore = async (req, res) => {
   try {
-    const { difficulty, result, moves, userId, username } = req.body;
-
-    // Verify userId matches authenticated user
-    if (userId !== req.user._id.toString()) {
-      return res
-        .status(403)
-        .json(ApiResponse.error("User ID mismatch", null, 403));
-    }
+    const { difficulty, result, moves, username } = req.body;
 
     // Create new score entry
     const score = new TicTacToeScore({
-      userId: req.user._id,
       username,
       difficulty,
       result,
@@ -134,7 +126,6 @@ exports.getLeaderboard = async (req, res) => {
       {
         $project: {
           _id: 1,
-          userId: 1,
           username: 1,
           difficulty: 1,
           result: 1,
@@ -147,7 +138,6 @@ exports.getLeaderboard = async (req, res) => {
     // Format response to match API spec
     const formattedData = leaderboard.map((entry) => ({
       id: entry._id,
-      user_id: entry.userId,
       username: entry.username,
       difficulty: entry.difficulty,
       result: entry.result,

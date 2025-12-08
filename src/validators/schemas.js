@@ -113,7 +113,6 @@ exports.applyCoupon = Joi.object({
 exports.submitPuzzleScore = Joi.object({
   puzzleType: Joi.string().valid("santa", "snowman", "tree").required(),
   timeMs: Joi.number().integer().min(1).max(3600000).required(),
-  userId: Joi.string().required(),
   username: Joi.string().min(3).max(20).required(),
 });
 
@@ -122,6 +121,5 @@ exports.submitTicTacToeScore = Joi.object({
   difficulty: Joi.string().valid("easy", "medium", "hard").required(),
   result: Joi.string().valid("win", "loss", "draw").required(),
   moves: Joi.number().integer().min(5).max(9).required(),
-  userId: Joi.string().required(),
   username: Joi.string().min(3).max(20).required(),
 });

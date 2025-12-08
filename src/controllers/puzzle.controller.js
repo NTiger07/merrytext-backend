@@ -7,18 +7,10 @@ const ApiResponse = require("../utils/ApiResponse");
  */
 exports.submitScore = async (req, res) => {
   try {
-    const { puzzleType, timeMs, userId, username } = req.body;
-
-    // Verify userId matches authenticated user
-    if (userId !== req.user._id.toString()) {
-      return res
-        .status(403)
-        .json(ApiResponse.error("User ID mismatch", null, 403));
-    }
+    const { puzzleType, timeMs, username } = req.body;
 
     // Create new score entry
     const score = new PuzzleScore({
-      userId: req.user._id,
       username,
       puzzleType,
       timeMs,
@@ -85,13 +77,12 @@ exports.getLeaderboard = async (req, res) => {
     const leaderboard = await PuzzleScore.find(query)
       .sort({ timeMs: 1, createdAt: 1 })
       .limit(limit)
-      .select("userId username puzzleType timeMs createdAt")
+      .select("username puzzleType timeMs createdAt")
       .lean();
 
     // Format response to match API spec
     const formattedData = leaderboard.map((entry) => ({
       id: entry._id,
-      user_id: entry.userId,
       username: entry.username,
       puzzle_type: entry.puzzleType,
       time_ms: entry.timeMs,
