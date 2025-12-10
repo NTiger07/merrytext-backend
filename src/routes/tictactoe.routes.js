@@ -4,10 +4,10 @@ const tictactoeController = require("../controllers/tictactoe.controller");
 const validate = require("../middleware/validate");
 const schemas = require("../validators/schemas");
 
-// Public route - Get leaderboard
-router.get("/leaderboard/:difficulty", tictactoeController.getLeaderboard);
+// Public route - Get play history for a user
+router.get("/history", tictactoeController.getHistory);
 
-// Public route - Submit score
+// Public route - Submit game result
 router.post(
   "/score",
   validate(schemas.submitTicTacToeScore),

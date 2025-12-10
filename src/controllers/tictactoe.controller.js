@@ -11,14 +11,14 @@ const POINTS = {
 };
 
 /**
- * Submit a tic-tac-toe score
+ * Submit a tic-tac-toe game result
  * POST /api/tictactoe/score
  */
 exports.submitScore = async (req, res) => {
   try {
     const { difficulty, result, moves, username } = req.body;
 
-    // Create new score entry
+    // Create new game entry
     const score = new TicTacToeScore({
       username,
       difficulty,
@@ -31,66 +31,35 @@ exports.submitScore = async (req, res) => {
     // Calculate points
     const points = POINTS[result];
 
-    // Calculate rank (count how many scores are better)
-    // Better = wins first, then draws, then losses; within category, fewer moves is better
-    const resultOrder = { win: 1, draw: 2, loss: 3 };
-
-    const rank = await TicTacToeScore.countDocuments({
-      difficulty,
-      $or: [
-        // Better result
-        {
-          result: {
-            $in: Object.keys(resultOrder).filter(
-              (r) => resultOrder[r] < resultOrder[result]
-            ),
-          },
-        },
-        // Same result but fewer moves
-        {
-          result,
-          moves: { $lt: moves },
-        },
-      ],
-    });
-
     return res.status(200).json(
       ApiResponse.success({
         id: score._id,
-        message: "Score saved successfully!",
+        message: "Game saved successfully!",
         points,
-        rank: rank + 1,
       })
     );
   } catch (error) {
-    console.error("Error submitting tic-tac-toe score:", error);
+    console.error("Error submitting tic-tac-toe game:", error);
     return res
       .status(500)
-      .json(ApiResponse.error("Failed to submit score", null, 500));
+      .json(ApiResponse.error("Failed to submit game", null, 500));
   }
 };
 
 /**
- * Get tic-tac-toe leaderboard
- * GET /api/tictactoe/leaderboard/:difficulty
+ * Get tic-tac-toe play history
+ * GET /api/tictactoe/history
  */
-exports.getLeaderboard = async (req, res) => {
+exports.getHistory = async (req, res) => {
   try {
-    const { difficulty } = req.params;
-    const limit = parseInt(req.query.limit) || 100;
+    const { username } = req.query;
+    const limit = parseInt(req.query.limit) || 50;
 
-    // Validate difficulty
-    const validDifficulties = ["easy", "medium", "hard", "all"];
-    if (!validDifficulties.includes(difficulty)) {
+    // Validate username is provided
+    if (!username) {
       return res
         .status(400)
-        .json(
-          ApiResponse.error(
-            "Invalid difficulty level. Must be one of: easy, medium, hard, all",
-            null,
-            400
-          )
-        );
+        .json(ApiResponse.error("Username is required", null, 400));
     }
 
     // Validate limit
@@ -100,56 +69,40 @@ exports.getLeaderboard = async (req, res) => {
         .json(ApiResponse.error("Limit must be between 1 and 500", null, 400));
     }
 
-    // Build query
-    const query = difficulty === "all" ? {} : { difficulty };
+    // Get play history for the user, sorted by most recent first
+    const history = await TicTacToeScore.find({ username })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select("difficulty result moves createdAt")
+      .lean();
 
-    // Get leaderboard with custom sorting
-    // Sort by: result (win > draw > loss), then moves (ascending), then createdAt (ascending)
-    const leaderboard = await TicTacToeScore.aggregate([
-      { $match: query },
-      {
-        $addFields: {
-          resultOrder: {
-            $switch: {
-              branches: [
-                { case: { $eq: ["$result", "win"] }, then: 1 },
-                { case: { $eq: ["$result", "draw"] }, then: 2 },
-                { case: { $eq: ["$result", "loss"] }, then: 3 },
-              ],
-              default: 4,
-            },
-          },
-        },
-      },
-      { $sort: { resultOrder: 1, moves: 1, createdAt: 1 } },
-      { $limit: limit },
-      {
-        $project: {
-          _id: 1,
-          username: 1,
-          difficulty: 1,
-          result: 1,
-          moves: 1,
-          createdAt: 1,
-        },
-      },
-    ]);
+    // Calculate statistics
+    const stats = {
+      totalGames: history.length,
+      wins: history.filter((g) => g.result === "win").length,
+      draws: history.filter((g) => g.result === "draw").length,
+      losses: history.filter((g) => g.result === "loss").length,
+    };
 
-    // Format response to match API spec
-    const formattedData = leaderboard.map((entry) => ({
+    // Format response
+    const formattedData = history.map((entry) => ({
       id: entry._id,
-      username: entry.username,
       difficulty: entry.difficulty,
       result: entry.result,
       moves: entry.moves,
       created_at: entry.createdAt,
     }));
 
-    return res.status(200).json(ApiResponse.success(formattedData));
+    return res.status(200).json(
+      ApiResponse.success({
+        stats,
+        history: formattedData,
+      })
+    );
   } catch (error) {
-    console.error("Error fetching tic-tac-toe leaderboard:", error);
+    console.error("Error fetching tic-tac-toe history:", error);
     return res
       .status(500)
-      .json(ApiResponse.error("Failed to fetch leaderboard", [], 500));
+      .json(ApiResponse.error("Failed to fetch history", null, 500));
   }
 };
